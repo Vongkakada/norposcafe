@@ -56,7 +56,10 @@ function ReceiptModal({ show, onClose, order, orderId, shopName }) {
         .receipt-container {
             background: white;
             padding: 15px;
-
+            margin: 0 auto;
+            width: 80mm;
+            max-width: 80mm;
+            box-sizing: border-box;
         }
 
         .receipt-print-area {
@@ -240,6 +243,8 @@ function ReceiptModal({ show, onClose, order, orderId, shopName }) {
                 width: 100%;
                 max-width: 100%;
                 margin: 0;
+                padding: 3mm;
+                box-sizing: border-box;
                 box-shadow: none;
                 border-radius: 0;
             }
