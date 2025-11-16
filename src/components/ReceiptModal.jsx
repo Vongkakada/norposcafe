@@ -240,7 +240,6 @@ function ReceiptModal({ show, onClose, order, orderId, shopName }) {
                 width: 100%;
                 max-width: 100%;
                 margin: 0;
-                padding: 3mm;
                 box-sizing: border-box;
                 box-shadow: none;
                 border-radius: 0;
