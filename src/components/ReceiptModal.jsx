@@ -15,7 +15,7 @@ function ReceiptModal({ show, onClose, order, orderId, shopName }) {
         if (!show) return;
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
-        const receiptWindow = window.open('', '_blank', 'width=400,height=600');
+        const receiptWindow = window.open('', '_blank', 'width=100%,height=600');
 
         if (receiptWindow) {
             const now = new Date();
