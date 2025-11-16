@@ -1,3 +1,7 @@
+
+// =====================================================
+// 2. ReceiptModal.jsx (កែសម្រួល - លុប onConfirmed)
+// =====================================================
 // src/components/ReceiptModal.jsx
 import { useEffect, useRef } from 'react';
 import { KHR_SYMBOL, formatKHR } from '../utils/formatters';
@@ -8,7 +12,7 @@ const SHOP_STATIC_DETAILS = {
     tel: "016 438 555 / 061 91 4444"
 };
 
-function ReceiptModal({ show, onClose, order, orderId, shopName = "ន កាហ្វេ", onConfirmed }) {
+function ReceiptModal({ show, onClose, order, orderId, shopName = "ន កាហ្វេ" }) {
     const printWindowRef = useRef(null);
 
     useEffect(() => {
@@ -150,15 +154,6 @@ function ReceiptModal({ show, onClose, order, orderId, shopName = "ន កាហ
         <button class="print-btn" onclick="window.print()">បោះពុម្ភវិក្កយបត្រ</button>
         <button class="close-btn" onclick="window.close()">បិទ</button>
     </div>
-
-    <script>
-        // បិទវីនដូ ហើយជូនដំណឹងទៅ App ដើម
-        window.onbeforeunload = function() {
-            if (window.opener) {
-                window.opener.postMessage('receipt-confirmed', '*');
-            }
-        };
-    </script>
 </body>
 </html>
         `);
@@ -166,27 +161,14 @@ function ReceiptModal({ show, onClose, order, orderId, shopName = "ន កាហ
         win.document.close();
         win.focus();
 
-        // រង់ចាំអ្នកបោះពុម្ភ ឬបិទវីនដូ → ទើប clear order
-        const handleConfirmation = () => {
-            onConfirmed();  // ← នេះជាកន្លែងដែល clear order និងបន្ថែម orderId
-            onClose();
-        };
-
-        const messageListener = (event) => {
-            if (event.data === 'receipt-confirmed') {
-                handleConfirmation();
-                window.removeEventListener('message', messageListener);
+        // Cleanup នៅពេលបិទ modal
+        return () => {
+            if (printWindowRef.current && !printWindowRef.current.closed) {
+                printWindowRef.current.close();
             }
         };
 
-        window.addEventListener('message', messageListener);
-
-        // បើអ្នកបិទវីនដូដោយផ្ទាល់ក៏ដំណើរការ
-        win.onbeforeunload = () => {
-            handleConfirmation();
-        };
-
-    }, [show, order, orderId, shopName, onClose, onConfirmed]);
+    }, [show, order, orderId, shopName, onClose]);
 
     return null;
 }

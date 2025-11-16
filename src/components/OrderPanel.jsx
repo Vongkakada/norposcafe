@@ -1,14 +1,18 @@
+// =====================================================
+// 3. OrderPanel.jsx (គ្មានការកែប្រែ - ដូចដើមទាំងអស់)
+// =====================================================
 // src/components/OrderPanel.jsx
 import React from 'react';
 import OrderItemEntry from './OrderItemEntry';
 import { KHR_SYMBOL, formatKHR } from '../utils/formatters';
+
 function OrderPanel({
   currentOrder,
   orderId,
   onUpdateQuantity,
   onClearOrder,
   shopName = "ន កាហ្វេ",
-  onProcessPayment, // ថ្មី: ប្រើ function ពី App.jsx
+  onProcessPayment,
 }) {
   const subtotalKHR = currentOrder.reduce(
     (sum, item) => sum + (item.priceKHR || item.priceUSD || 0) * item.quantity,
@@ -60,7 +64,7 @@ function OrderPanel({
 
         <button 
           className="btn-pay" 
-          onClick={onProcessPayment} // ប្រើ function ពី App.jsx (ដែលមាន save + print)
+          onClick={onProcessPayment}
           disabled={currentOrder.length === 0}
         >
           គិតលុយ
