@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import OrderItemEntry from './OrderItemEntry';
 import { KHR_SYMBOL, formatKHR } from '../utils/formatters';
-import { generateReceiptBitmap } from '../utils/receiptGenerator';
+import { printBitmapViaRawBT } from '../utils/escposBitmapPrinter';
 
 function OrderPanel({
     currentOrder,
@@ -25,26 +25,17 @@ function OrderPanel({
         setIsPrinting(true);
 
         try {
-            // Generate monochrome bitmap receipt
-            const bitmapURL = await generateReceiptBitmap({
+            const receiptData = {
                 shopName,
                 orderId,
                 order: currentOrder,
                 totalKHR,
-            });
+            };
 
-            // Extract base64 data
-            const base64Data = bitmapURL.split(',')[1];
+            // Print using ESC/POS with bitmap raster
+            await printBitmapViaRawBT(receiptData);
 
-            // Send directly to RawBT app
-            // Try multiple URL schemes for compatibility
-            window.location.href = `rawbt:base64,${base64Data}`;
-            
-            // Alternative formats (uncomment if above doesn't work):
-            // window.location.href = `rawbt:image,${base64Data}`;
-            // window.location.href = `rawbt://print?image=${base64Data}`;
-
-            // Process payment after short delay
+            // Success - process payment
             setTimeout(() => {
                 onProcessPayment();
                 setIsPrinting(false);
@@ -52,7 +43,14 @@ function OrderPanel({
 
         } catch (error) {
             console.error('Print error:', error);
-            alert('❌ មានបញ្ហាក្នុងការបោះពុម្ព!\n\n' + error.message);
+            alert(
+                '❌ មានបញ្ហាក្នុងការបោះពុម្ព!\n\n' +
+                'សូមពិនិត្យ:\n' +
+                '• RawBT app installed\n' +
+                '• Printer connected via Bluetooth\n' +
+                '• Printer turned on\n\n' +
+                error.message
+            );
             setIsPrinting(false);
         }
     };
@@ -61,23 +59,35 @@ function OrderPanel({
         <div className="order-panel">
             <h2>បញ្ជីកម្ម៉ង់បច្ចុប្បន្ន #{orderId}</h2>
 
-            {/* Print Info Banner */}
+            {/* ESC/POS Info Banner */}
             <div style={{
                 marginBottom: '12px',
-                padding: '12px',
+                padding: '14px',
                 background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                borderRadius: '8px',
+                borderRadius: '10px',
                 color: 'white',
-                fontSize: '13px',
-                fontWeight: '500',
-                textAlign: 'center',
-                boxShadow: '0 2px 8px rgba(102, 126, 234, 0.3)'
+                boxShadow: '0 4px 12px rgba(102, 126, 234, 0.4)'
             }}>
-                <div style={{ marginBottom: '4px', fontSize: '16px' }}>
-                    🖨️ Bitmap Printing Mode
+                <div style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center',
+                    gap: '8px',
+                    marginBottom: '6px'
+                }}>
+                    <span style={{ fontSize: '20px' }}>🖨️</span>
+                    <span style={{ fontSize: '16px', fontWeight: 'bold' }}>
+                        ESC/POS Bitmap Raster
+                    </span>
                 </div>
-                <div style={{ fontSize: '11px', opacity: 0.9 }}>
-                    ✓ អក្សរខ្មែរច្បាស់ល្អ ✓ QR Code ✓ Logo ✓ មិនរាល
+                <div style={{ 
+                    fontSize: '11px', 
+                    opacity: 0.95,
+                    textAlign: 'center',
+                    lineHeight: '1.4'
+                }}>
+                    ✓ Khmer Font ✓ QR Code ✓ Logo<br/>
+                    ✓ Monochrome Bitmap ✓ RawBT Compatible
                 </div>
             </div>
 
@@ -116,7 +126,8 @@ function OrderPanel({
                     onClick={onClearOrder} 
                     disabled={currentOrder.length === 0 || isPrinting}
                     style={{
-                        opacity: (currentOrder.length === 0 || isPrinting) ? 0.5 : 1
+                        opacity: (currentOrder.length === 0 || isPrinting) ? 0.5 : 1,
+                        cursor: (currentOrder.length === 0 || isPrinting) ? 'not-allowed' : 'pointer'
                     }}
                 >
                     🗑️ លុបការកម្ម៉ង់
@@ -127,7 +138,8 @@ function OrderPanel({
                     disabled={currentOrder.length === 0 || isPrinting}
                     style={{
                         opacity: (currentOrder.length === 0 || isPrinting) ? 0.5 : 1,
-                        position: 'relative'
+                        cursor: (currentOrder.length === 0 || isPrinting) ? 'not-allowed' : 'pointer',
+                        background: isPrinting ? '#ccc' : undefined
                     }}
                 >
                     {isPrinting ? (
@@ -137,7 +149,7 @@ function OrderPanel({
                                 animation: 'spin 1s linear infinite',
                                 marginRight: '8px'
                             }}>⏳</span>
-                            កំពុងបង្កើត Bitmap...
+                            កំពុង Print...
                         </>
                     ) : (
                         <>💰 គិតលុយ & Print</>
@@ -145,7 +157,7 @@ function OrderPanel({
                 </button>
             </div>
 
-            {/* Loading overlay */}
+            {/* Loading Overlay */}
             {isPrinting && (
                 <div style={{
                     position: 'fixed',
@@ -153,40 +165,65 @@ function OrderPanel({
                     left: 0,
                     right: 0,
                     bottom: 0,
-                    backgroundColor: 'rgba(0,0,0,0.8)',
+                    backgroundColor: 'rgba(0,0,0,0.85)',
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
                     justifyContent: 'center',
                     zIndex: 9999,
+                    backdropFilter: 'blur(4px)'
                 }}>
                     <div style={{
                         background: 'white',
-                        padding: '32px 48px',
-                        borderRadius: '16px',
+                        padding: '40px 60px',
+                        borderRadius: '20px',
                         textAlign: 'center',
-                        boxShadow: '0 20px 60px rgba(0,0,0,0.5)'
+                        boxShadow: '0 20px 80px rgba(0,0,0,0.6)',
+                        maxWidth: '90%'
                     }}>
                         <div style={{
-                            fontSize: '48px',
-                            marginBottom: '16px',
+                            fontSize: '64px',
+                            marginBottom: '20px',
                             animation: 'spin 2s linear infinite'
                         }}>
                             🖨️
                         </div>
                         <div style={{
-                            fontSize: '18px',
+                            fontSize: '20px',
                             fontWeight: 'bold',
                             color: '#333',
-                            marginBottom: '8px'
+                            marginBottom: '12px'
                         }}>
-                            កំពុងបង្កើត Receipt Bitmap...
+                            កំពុងបង្កើត ESC/POS Bitmap...
                         </div>
                         <div style={{
-                            fontSize: '13px',
-                            color: '#666'
+                            fontSize: '14px',
+                            color: '#666',
+                            lineHeight: '1.6'
                         }}>
-                            សូមរង់ចាំបន្តិច
+                            Converting to monochrome raster<br/>
+                            Sending to RawBT app...
+                        </div>
+                        
+                        {/* Progress dots */}
+                        <div style={{
+                            marginTop: '24px',
+                            display: 'flex',
+                            gap: '8px',
+                            justifyContent: 'center'
+                        }}>
+                            {[0, 1, 2].map(i => (
+                                <div
+                                    key={i}
+                                    style={{
+                                        width: '10px',
+                                        height: '10px',
+                                        borderRadius: '50%',
+                                        background: '#667eea',
+                                        animation: `bounce 1.4s ease-in-out ${i * 0.2}s infinite`
+                                    }}
+                                />
+                            ))}
                         </div>
                     </div>
                 </div>
@@ -196,6 +233,17 @@ function OrderPanel({
                 @keyframes spin {
                     from { transform: rotate(0deg); }
                     to { transform: rotate(360deg); }
+                }
+                
+                @keyframes bounce {
+                    0%, 80%, 100% {
+                        transform: scale(0);
+                        opacity: 0.5;
+                    }
+                    40% {
+                        transform: scale(1);
+                        opacity: 1;
+                    }
                 }
             `}</style>
         </div>
