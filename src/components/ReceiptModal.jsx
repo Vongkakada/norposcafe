@@ -1,116 +1,58 @@
-// src/components/ReceiptModal.jsx
 import React, { useState, useEffect } from "react";
 import { KHR_SYMBOL, formatKHR } from "../utils/formatters";
-import jsPDF from "jspdf";
-import qrcode from "../assets/qrcode.jpg";
-import logo from "../assets/logo.png";
-
-const SHOP_STATIC_DETAILS = {
-  address: "ផ្ទះលេខ 137 , ផ្លូវ 223, កំពង់ចាម",
-  tel: "016 438 555 / 061 91 4444",
-};
+import { generateRawBTUrl } from "../utils/printerRawBT"; // នាំចូល Utility ថ្មី
 
 function ReceiptModal({ show, onClose, order, orderId, shopName }) {
-  const [pdfUrl, setPdfUrl] = useState(null);
+  const [rawBTLink, setRawBTLink] = useState('');
 
-  const subtotalKHR = order.reduce(
-    (sum, item) => sum + (item.priceKHR || item.priceUSD || 0) * item.quantity,
-    0
-  );
-  const totalKHR = subtotalKHR;
-
+  // ជំនួស jsPDF ដោយការបង្កើត RawBT URL
   useEffect(() => {
-  if (!show) return;
+    if (!show || order.length === 0) return;
 
-  const now = new Date();
-  let isMounted = true; // flag to prevent state update after unmount
-
-  const generatePDF = async () => {
-    const pdf = new jsPDF({ orientation: "p", unit: "pt", format: [220, 600] });
-
-    // Logo
-    const logoImg = new Image();
-    logoImg.src = logo;
-    await new Promise((res) => { logoImg.onload = res; });
-
-    pdf.addImage(logoImg, "PNG", 80, 10, 50, 50);
-
-    pdf.setFontSize(12);
-    pdf.text(shopName, 110, 70, { align: "center" });
-    pdf.text(SHOP_STATIC_DETAILS.address, 110, 85, { align: "center" });
-    pdf.text(`Tel: ${SHOP_STATIC_DETAILS.tel}`, 110, 100, { align: "center" });
-    pdf.setFontSize(10);
-    pdf.text(`${now.toLocaleDateString()} ${now.toLocaleTimeString()}`, 110, 115, { align: "center" });
-    pdf.text(`Invoice: ${orderId}`, 110, 130, { align: "center" });
-    pdf.line(10, 140, 210, 140);
-
-    let y = 155;
-    order.forEach((item) => {
-      pdf.setFontSize(11);
-      pdf.text(`${item.khmerName}`, 12, y);
-      pdf.text(`${item.englishName || ""} x${item.quantity}`, 12, y + 12);
-      pdf.text(`${KHR_SYMBOL}${formatKHR((item.priceKHR || item.priceUSD) * item.quantity)}`, 208, y + 12, { align: "right" });
-      y += 28;
-    });
-
-    pdf.line(10, y, 210, y);
-    y += 12;
-    pdf.setFontSize(12);
-    pdf.text(`Total: ${KHR_SYMBOL}${formatKHR(totalKHR)}`, 110, y, { align: "center" });
-
-    y += 20;
-
-    const qrImg = new Image();
-    qrImg.src = qrcode;
-    await new Promise((res) => { qrImg.onload = res; });
-    pdf.addImage(qrImg, "PNG", 65, y, 90, 90);
-    y += 100;
-
-    pdf.setFontSize(10);
-    pdf.text("សូមអរគុណ! សូមអញ្ជើញមកម្តងទៀត!", 110, y, { align: "center" });
-
-    const pdfBlob = pdf.output("blob");
-    const url = URL.createObjectURL(pdfBlob);
-
-    if (isMounted) {
-      setPdfUrl(url);
+    try {
+        // បង្កើត URL រាល់ពេលដែល modal បើក
+        const url = generateRawBTUrl(order, orderId, shopName);
+        setRawBTLink(url);
+    } catch (e) {
+        console.error("Error generating RawBT URL:", e);
+        setRawBTLink(null);
     }
-  };
-
-  generatePDF();
-
-  return () => {
-    isMounted = false;
-  };
-  // ✅ leave dependency array as is
-}, [show, order, shopName, orderId, totalKHR]);
-
+    
+  }, [show, order, shopName, orderId]);
 
   if (!show) return null;
 
+  // យើងលែងត្រូវការ Preview ជា PDF ទៀតហើយ ព្រោះការបោះពុម្ព Raw Text មិនបង្ហាញ Preview ទេ
   return (
     <div className="modal show" id="receiptModal">
       <div className="modal-content">
         <span className="close-button" onClick={onClose}>×</span>
 
-        <div className="receipt-preview">
-          {pdfUrl ? (
-            <iframe
-              title="Receipt PDF"
-              src={pdfUrl}
-              style={{ width: "100%", height: "400px", border: "none" }}
-            />
-          ) : (
-            <p>Generating PDF...</p>
-          )}
+        <div style={{ padding: '20px', textAlign: 'center' }}>
+            <h3>ត្រៀមខ្លួនសម្រាប់បោះពុម្ព (RawBT)</h3>
+            <p>សូមប្រាកដថា Bluetooth ត្រូវបានបើក ហើយម៉ាស៊ីនបោះពុម្ពត្រូវបានភ្ជាប់ទៅ RawBT App</p>
         </div>
 
-        <div className="print-button-container" style={{ display: "flex", gap: "10px", marginTop: "12px" }}>
+        <div className="print-button-container" style={{ display: "flex", justifyContent: "center", gap: "10px", marginTop: "15px" }}>
           <button className="btn-close-receipt" onClick={onClose}>បោះបង់</button>
-          {pdfUrl && (
-            <a href={pdfUrl} download={`Receipt_${orderId}.pdf`}>
-              <button className="btn-print">Download / Print PDF</button>
+          
+          {rawBTLink ? (
+            // ប្រើ Link Tag ដើម្បី Redirect ទៅ RawBT App
+            <a 
+              href={rawBTLink} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              onClick={() => {
+                  // អាចបន្ថែម logic សម្រាប់ការបិទ modal ភ្លាមៗ
+                  setTimeout(onClose, 500); 
+              }}
+            >
+              <button className="btn-print" style={{ backgroundColor: '#28a745', color: 'white' }}>
+                🖨️ បោះពុម្ពតាម RawBT
+              </button>
             </a>
+          ) : (
+            <p>កំពុងបង្កើតតំណរ... (ពិនិត្យ Error ក្នុង Console)</p>
           )}
         </div>
       </div>
