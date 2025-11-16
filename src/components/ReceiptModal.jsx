@@ -214,7 +214,7 @@ function ReceiptModal({ show, onClose, order, orderId, shopName }) {
 
         /* Print Styles - Optimized for 80mm Thermal Printer */
         @page {
-            size: 100% auto;
+            size: 100%;
             margin: 0;
         }
 
