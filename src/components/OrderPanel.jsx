@@ -74,7 +74,7 @@ function OrderPanel({
             cursor: currentOrder.length === 0 ? 'not-allowed' : 'pointer'
           }}
         >
-          💰 គិតលុយ & Preview
+          💰 គិតលុយ
         </button>
       </div>
 
