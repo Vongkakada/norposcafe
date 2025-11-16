@@ -1,16 +1,19 @@
+// src/components/ReceiptModal.jsx
+
 import React, { useState, useEffect } from "react";
-import { KHR_SYMBOL, formatKHR } from "../utils/formatters";
-import { generateRawBTUrl } from "../utils/printerRawBT"; // នាំចូល Utility ថ្មី
+// លុប KHR_SYMBOL និង formatKHR ដែលមិនបានប្រើ
+import { generateRawBTUrl } from "../utils/printerRawBT"; 
 
 function ReceiptModal({ show, onClose, order, orderId, shopName }) {
   const [rawBTLink, setRawBTLink] = useState('');
 
-  // ជំនួស jsPDF ដោយការបង្កើត RawBT URL
   useEffect(() => {
-    if (!show || order.length === 0) return;
+    if (!show || order.length === 0) {
+        setRawBTLink('');
+        return;
+    }
 
     try {
-        // បង្កើត URL រាល់ពេលដែល modal បើក
         const url = generateRawBTUrl(order, orderId, shopName);
         setRawBTLink(url);
     } catch (e) {
@@ -22,7 +25,6 @@ function ReceiptModal({ show, onClose, order, orderId, shopName }) {
 
   if (!show) return null;
 
-  // យើងលែងត្រូវការ Preview ជា PDF ទៀតហើយ ព្រោះការបោះពុម្ព Raw Text មិនបង្ហាញ Preview ទេ
   return (
     <div className="modal show" id="receiptModal">
       <div className="modal-content">
@@ -30,20 +32,22 @@ function ReceiptModal({ show, onClose, order, orderId, shopName }) {
 
         <div style={{ padding: '20px', textAlign: 'center' }}>
             <h3>ត្រៀមខ្លួនសម្រាប់បោះពុម្ព (RawBT)</h3>
-            <p>សូមប្រាកដថា Bluetooth ត្រូវបានបើក ហើយម៉ាស៊ីនបោះពុម្ពត្រូវបានភ្ជាប់ទៅ RawBT App</p>
+            <p style={{fontSize: '14px'}}>សូមប្រាកដថា Bluetooth ត្រូវបានបើក ហើយម៉ាស៊ីនបោះពុម្ពត្រូវបានភ្ជាប់ទៅ RawBT App</p>
+            {rawBTLink === null && (
+                <p style={{ color: 'red' }}>មានបញ្ហាក្នុងការបង្កើតតំណរ! ពិនិត្យ Console.</p>
+            )}
         </div>
 
         <div className="print-button-container" style={{ display: "flex", justifyContent: "center", gap: "10px", marginTop: "15px" }}>
           <button className="btn-close-receipt" onClick={onClose}>បោះបង់</button>
           
-          {rawBTLink ? (
-            // ប្រើ Link Tag ដើម្បី Redirect ទៅ RawBT App
+          {rawBTLink && (
             <a 
               href={rawBTLink} 
-              target="_blank" 
+              // target="_blank" ត្រូវបានដកចេញព្រោះ intent URL ដំណើរការល្អជាងដោយគ្មានវា
               rel="noopener noreferrer"
               onClick={() => {
-                  // អាចបន្ថែម logic សម្រាប់ការបិទ modal ភ្លាមៗ
+                  // បិទ Modal បន្ទាប់ពីប៉ុន្មានវិនាទីដើម្បីបើក RawBT
                   setTimeout(onClose, 500); 
               }}
             >
@@ -51,8 +55,6 @@ function ReceiptModal({ show, onClose, order, orderId, shopName }) {
                 🖨️ បោះពុម្ពតាម RawBT
               </button>
             </a>
-          ) : (
-            <p>កំពុងបង្កើតតំណរ... (ពិនិត្យ Error ក្នុង Console)</p>
           )}
         </div>
       </div>

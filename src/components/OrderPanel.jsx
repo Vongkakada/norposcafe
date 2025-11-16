@@ -1,4 +1,5 @@
 // src/components/OrderPanel.jsx
+
 import React, { useState } from 'react';
 import OrderItemEntry from './OrderItemEntry';
 import { KHR_SYMBOL, formatKHR } from '../utils/formatters';
@@ -74,7 +75,7 @@ function OrderPanel({
             cursor: currentOrder.length === 0 ? 'not-allowed' : 'pointer'
           }}
         >
-          💰 គិតលុយ & Preview
+          💰 គិតលុយ & Print (RawBT)
         </button>
       </div>
 
