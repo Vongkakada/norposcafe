@@ -1316,121 +1316,96 @@ body {
 }
 /* បន្ថែមនៅក្នុង CSS file របស់អ្នក */
 
-/* លាក់ទាំងអស់នៅពេល print លើកតែ receipt */
+/* ==================== PRINT STYLES ==================== */
+/* Receipt Print Configuration */
+@page {
+    size: 80mm auto;
+    margin: 6mm;
+}
+
 @media print {
-    /* លាក់ទាំងអស់ */
+    /* Hide everything by default */
     body * {
-        visibility: hidden;
+        visibility: hidden !important;
     }
-    
-    /* បង្ហាញតែ receipt និង child elements របស់វា */
+
+    /* Show only receipt */
     .receipt-print-area,
     .receipt-print-area * {
-        visibility: visible;
+        visibility: visible !important;
     }
-    
-    /* ដាក់ receipt នៅ position ដើម */
+
+    /* Position receipt */
     .receipt-print-area {
-        position: absolute;
-        left: 0;
-        top: 0;
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 80mm !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        box-sizing: border-box !important;
+        background: white !important;
+        page-break-inside: avoid !important;
     }
-    
-    /* លាក់ modal background និង buttons */
+
+    /* Clean backgrounds */
+    html, body {
+        background: white !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    /* Remove modal styles */
     .modal,
-    .modal-content,
-    .close-button,
-    .print-button-container {
-        background: none !important;
-        border: none !important;
+    .modal-content {
+        background: transparent !important;
         box-shadow: none !important;
+        border: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
     }
-    
+
+    /* Hide all UI elements */
+    .print-button-container,
     .close-button,
-    .print-button-container {
+    .btn-close-receipt,
+    .btn-print,
+    .app-navigation,
+    .menu-panel,
+    .order-panel,
+    .category-tabs,
+    .pos-container,
+    .sales-report-panel,
+    .report-view-container,
+    .stock-management-panel,
+    .action-buttons,
+    .report-controls,
+    .report-actions {
         display: none !important;
+        visibility: hidden !important;
     }
-    
-    /* កំណត់ទំហំ page */
-    @page {
-        size: 80mm auto;
-        margin: 6mm;
+
+    /* Receipt logo sizing */
+    .receipt-logo {
+        width: 20mm !important;
+        height: auto !important;
+        max-height: 40mm !important;
     }
-    
-    /* លុប page break ចេញ */
+
+    /* QR code sizing */
+    .receipt-qr-code img {
+        width: 60px !important;
+        height: 60px !important;
+    }
+
+    /* Ensure black text */
+    .receipt-print-area,
+    .receipt-print-area * {
+        color: black !important;
+    }
+
+    /* Page break control */
     .receipt-print-area {
-        page-break-inside: avoid;
+        page-break-after: always !important;
     }
-}
-
-/* Style ធម្មតា (មិនមែន print) */
-.modal {
-    position: fixed;
-    z-index: 1000;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-.modal-content {
-    background-color: white;
-    padding: 20px;
-    border-radius: 8px;
-    max-width: 90%;
-    max-height: 90vh;
-    overflow-y: auto;
-    position: relative;
-}
-
-.close-button {
-    position: absolute;
-    right: 15px;
-    top: 10px;
-    font-size: 28px;
-    font-weight: bold;
-    color: #999;
-    cursor: pointer;
-}
-
-.close-button:hover {
-    color: #000;
-}
-
-.print-button-container {
-    margin-top: 20px;
-    display: flex;
-    gap: 10px;
-    justify-content: flex-end;
-}
-
-.btn-close-receipt,
-.btn-print {
-    padding: 10px 20px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 16px;
-}
-
-.btn-close-receipt {
-    background-color: #f44336;
-    color: white;
-}
-
-.btn-print {
-    background-color: #4CAF50;
-    color: white;
-}
-
-.btn-close-receipt:hover {
-    background-color: #da190b;
-}
-
-.btn-print:hover {
-    background-color: #45a049;
 }

@@ -59,7 +59,7 @@ function ReceiptModal({ show, onClose, order, orderId, exchangeRate, shopName })
             el.style.transformOrigin = '';
         }
 
-        // ចាំបន្តិចមុនពេល print ដើម្បីឲ្យ style ត្រូវបាន apply
+        // ចាំបន្តិចមុនពេល print ដើម្បីឲ្យ style apply
         setTimeout(() => {
             window.print();
         }, 100);
