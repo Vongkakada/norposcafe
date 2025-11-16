@@ -14,6 +14,8 @@ function OrderPanel({
     shopName = "ហាងលក់ទំនិញ",
 }) {
     const [isPrinting, setIsPrinting] = useState(false);
+    const [printerWidth, setPrinterWidth] = useState(80); // 58 or 80
+    const [printMethod, setPrintMethod] = useState('ESC*'); // 'ESC*' or 'GSv'
 
     const subtotalKHR = currentOrder.reduce(
         (sum, item) => sum + (item.priceKHR || item.priceUSD || 0) * item.quantity, 
@@ -33,7 +35,10 @@ function OrderPanel({
             };
 
             // Print using ESC/POS with bitmap raster
-            await printBitmapViaRawBT(receiptData);
+            await printBitmapViaRawBT(receiptData, {
+                printerWidth,
+                method: printMethod
+            });
 
             // Success - process payment
             setTimeout(() => {
@@ -59,7 +64,7 @@ function OrderPanel({
         <div className="order-panel">
             <h2>បញ្ជីកម្ម៉ង់បច្ចុប្បន្ន #{orderId}</h2>
 
-            {/* ESC/POS Info Banner */}
+            {/* ESC/POS Settings */}
             <div style={{
                 marginBottom: '12px',
                 padding: '14px',
@@ -73,21 +78,120 @@ function OrderPanel({
                     alignItems: 'center', 
                     justifyContent: 'center',
                     gap: '8px',
-                    marginBottom: '6px'
+                    marginBottom: '10px'
                 }}>
                     <span style={{ fontSize: '20px' }}>🖨️</span>
                     <span style={{ fontSize: '16px', fontWeight: 'bold' }}>
-                        ESC/POS Bitmap Raster
+                        ESC/POS Bitmap Settings
                     </span>
                 </div>
+                
+                {/* Printer Width Selector */}
+                <div style={{ marginBottom: '10px' }}>
+                    <div style={{ fontSize: '12px', marginBottom: '6px', opacity: 0.9 }}>
+                        📏 Printer Size:
+                    </div>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                        <label style={{
+                            flex: 1,
+                            padding: '8px 12px',
+                            background: printerWidth === 58 ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.1)',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            fontSize: '13px',
+                            textAlign: 'center',
+                            border: printerWidth === 58 ? '2px solid white' : '2px solid transparent',
+                            transition: 'all 0.2s'
+                        }}>
+                            <input
+                                type="radio"
+                                value="58"
+                                checked={printerWidth === 58}
+                                onChange={(e) => setPrinterWidth(Number(e.target.value))}
+                                style={{ display: 'none' }}
+                            />
+                            58mm
+                        </label>
+                        <label style={{
+                            flex: 1,
+                            padding: '8px 12px',
+                            background: printerWidth === 80 ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.1)',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            fontSize: '13px',
+                            textAlign: 'center',
+                            border: printerWidth === 80 ? '2px solid white' : '2px solid transparent',
+                            transition: 'all 0.2s'
+                        }}>
+                            <input
+                                type="radio"
+                                value="80"
+                                checked={printerWidth === 80}
+                                onChange={(e) => setPrinterWidth(Number(e.target.value))}
+                                style={{ display: 'none' }}
+                            />
+                            80mm
+                        </label>
+                    </div>
+                </div>
+                
+                {/* Print Method Selector */}
+                <div>
+                    <div style={{ fontSize: '12px', marginBottom: '6px', opacity: 0.9 }}>
+                        ⚙️ Print Method:
+                    </div>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                        <label style={{
+                            flex: 1,
+                            padding: '8px 12px',
+                            background: printMethod === 'ESC*' ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.1)',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            fontSize: '13px',
+                            textAlign: 'center',
+                            border: printMethod === 'ESC*' ? '2px solid white' : '2px solid transparent',
+                            transition: 'all 0.2s'
+                        }}>
+                            <input
+                                type="radio"
+                                value="ESC*"
+                                checked={printMethod === 'ESC*'}
+                                onChange={(e) => setPrintMethod(e.target.value)}
+                                style={{ display: 'none' }}
+                            />
+                            ESC * (Standard)
+                        </label>
+                        <label style={{
+                            flex: 1,
+                            padding: '8px 12px',
+                            background: printMethod === 'GSv' ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.1)',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            fontSize: '13px',
+                            textAlign: 'center',
+                            border: printMethod === 'GSv' ? '2px solid white' : '2px solid transparent',
+                            transition: 'all 0.2s'
+                        }}>
+                            <input
+                                type="radio"
+                                value="GSv"
+                                checked={printMethod === 'GSv'}
+                                onChange={(e) => setPrintMethod(e.target.value)}
+                                style={{ display: 'none' }}
+                            />
+                            GS v (Raster)
+                        </label>
+                    </div>
+                </div>
+                
                 <div style={{ 
-                    fontSize: '11px', 
-                    opacity: 0.95,
+                    fontSize: '10px', 
+                    opacity: 0.85,
+                    marginTop: '8px',
                     textAlign: 'center',
-                    lineHeight: '1.4'
+                    lineHeight: '1.3'
                 }}>
-                    ✓ Khmer Font ✓ QR Code ✓ Logo<br/>
-                    ✓ Monochrome Bitmap ✓ RawBT Compatible
+                    💡 ប្រសិនបើមិន print ចេញ សូមប្តូរ method
                 </div>
             </div>
 
