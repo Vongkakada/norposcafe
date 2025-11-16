@@ -2,7 +2,7 @@
 import { useEffect } from 'react';
 import { KHR_SYMBOL, formatKHR } from '../utils/formatters';
 import qrcode from '../assets/qrcode.jpg';
-import logo from '../assets/logo.png'; // រក្សា logo ដើម (អាចជា logo ពណ៌)
+import logo from '../assets/logo.png';
 
 const SHOP_STATIC_DETAILS = {
     address: "ផ្ទះលេខ 137 , ផ្លូវ 223, កំពង់ចាម",
@@ -13,6 +13,18 @@ function ReceiptModal({ show, onClose, order, orderId, shopName }) {
     useEffect(() => {
         if (!show) return;
 
+        const receiptWindow = window.open(
+            '',
+            '_blank',
+            'width=420,height=720,scrollbars=no,resizable=no'
+        );
+
+        if (!receiptWindow) {
+            alert('សូមអនុញ្ញាត Pop-up');
+            onClose();
+            return;
+        }
+
         const now = new Date();
         const subtotalKHR = order.reduce((sum, item) => sum + (item.priceKHR || item.priceUSD || 0) * item.quantity, 0);
         const totalKHR = subtotalKHR;
@@ -21,25 +33,7 @@ function ReceiptModal({ show, onClose, order, orderId, shopName }) {
         const qrData = `ORDER_ID:${orderId};TOTAL_KHR:${formatKHR(totalKHR)};SHOP_NAME:${safeShopNameForQR}`;
         const qrCodeUrl = qrcode + `?data=${encodeURIComponent(qrData)}`;
 
-        // បង្កើត invisible iframe ដើម្បី print ដោយមិនបង្ហាញ Tab
-        const printFrame = document.createElement('iframe');
-        printFrame.style.position = 'fixed';
-        printFrame.style.right = '0';
-        printFrame.style.bottom = '0';
-        printFrame.style.width = '0px';
-        printFrame.style.height = '0px';
-        printFrame.style.border = 'none';
-        printFrame.style.visibility = 'hidden';
-        document.body.appendChild(printFrame);
-
-        printFrame.onload = () => {
-            setTimeout(() => {
-                printFrame.contentWindow.focus();
-                printFrame.contentWindow.print();
-            }, 500);
-        };
-
-        printFrame.srcdoc = `
+        receiptWindow.document.write(`
 <!DOCTYPE html>
 <html lang="km">
 <head>
@@ -50,28 +44,38 @@ function ReceiptModal({ show, onClose, order, orderId, shopName }) {
         * { margin:0; padding:0; box-sizing:border-box; }
         body {
             font-family: 'Kantumruy Pro', sans-serif;
+            background:#f8f8f8;
+            padding:10px;
+            display:flex;
+            justify-content:center;
+        }
+        .receipt {
             width:80mm;
+            background:white;
             padding:10px 6px;
+            border-radius:8px;
+            box-shadow:0 4px 15px rgba(0,0,0,0.2);
             font-size:9.5pt;
             line-height:1.4;
-            background:white;
         }
-        .logo { text-align:center; margin-bottom:10px; }
-        .logo img {
-            width:50px;
-            height:auto;
-            filter: brightness(0) invert(0); /* បង្ខំឲ្យ Logo ខ្មៅ 100% (Black Overlay) */
-            -webkit-filter: brightness(0) invert(0);
-        }
+        .logo img { 
+                    width:45px; 
+                    height:auto; 
+                    display:block; 
+                    margin:0 auto 8px; 
+                    filter: grayscale(100%) brightness(0) contrast(1000%);
+                    -webkit-filter: grayscale(100%) brightness(0) contrast(1000%);
+                }
         .header { text-align:center; margin-bottom:8px; }
         .header h3 { font-size:13pt; margin:5px 0; font-weight:bold; }
-        .header p { font-size:8.5pt; margin:2px 0; color:#333; }
+        .header p { font-size:8.5pt; margin:2px 0; color:#444; }
         .divider { border-top:1px dashed #000; margin:6px 0; }
         table { width:100%; border-collapse:collapse; margin:6px 0; font-size:9pt; }
-        th { background:#f0f0f0; padding:4px 2px; font-weight:bold; font-size:8.5pt; }
+        th { background:#eee; padding:4px 2px; font-weight:bold; font-size:8.5pt; }
         td { padding:3px 2px; border-bottom:1px dotted #999; }
         td:nth-child(2) { text-align:center; }
         td:last-child { text-align:right; }
+        .summary { margin:8px 0; font-size:10pt; }
         .total {
             font-size:12.5pt !important;
             font-weight:bold;
@@ -81,67 +85,83 @@ function ReceiptModal({ show, onClose, order, orderId, shopName }) {
         }
         .qr { text-align:center; margin:10px 0; }
         .qr img { width:50mm; height:50mm; padding:3px; border:1px solid #000; background:white; }
-        .footer { text-align:center; margin-top:10px; font-weight:bold; }
+        .footer { text-align:center; margin-top:10px; font-weight:bold; font-size:9.5pt; }
 
-        @page { size: 80mm auto; margin:0; }
+        /* សំខាន់បំផុត: បង្ខំឲ្យ Print ចេញតែ 1 Page គត់ */
         @media print {
-            body, html { background:white; margin:0; padding:0; }
+            @page {
+                size: 80mm auto;   /* ក្រដាស 80mm */
+                margin: 0;
+            }
+            html, body {
+                height: auto !important;
+                overflow: visible !important;
+            }
+            .receipt {
+                page-break-after: avoid;
+                page-break-before: avoid;
+                page-break-inside: avoid;
+                height: auto;
+                min-height: auto;
+                padding: 8px 5px;
+                border: none;
+                box-shadow: none;
+            }
+            /* បង្ខំឲ្យ table មិន break ទំព័រ */
+            table, tr, td, th { page-break-inside: avoid; }
+            /* បើ order វែងខ្លាំង → បង្រួញអក្សរបន្តិចដើម្បី fit 1 page */
+            .receipt { font-size: 8.5pt !important; line-height: 1.3 !important; }
+            table { font-size: 8pt !important; }
+            .total { font-size: 11pt !important; }
         }
     </style>
 </head>
-<body>
-    <div class="logo"><img src="${logo}" onerror="this.style.display='none'"></div>
-    <div class="header">
-        <h3>${shopName}</h3>
-        <p>${SHOP_STATIC_DETAILS.address}</p>
-        <p>ទូរស័ព្ទ: ${SHOP_STATIC_DETAILS.tel}</p>
-        <p>${now.toLocaleDateString('km-KH')} ${now.toLocaleTimeString('km-KH', {hour:'2-digit',minute:'2-digit'})}</p>
-        <p>វិក្កយបត្រ: ${orderId}</p>
-    </div>
-    <div class="divider"></div>
+<body onload="setTimeout(() => window.print(), 600)">
+    <div class="receipt">
+        <div class="logo"><img src="${logo}" onerror="this.style.display='none'"></div>
+        <div class="header">
+            <h3>${shopName}</h3>
+            <p>${SHOP_STATIC_DETAILS.address}</p>
+            <p>ទូរស័ព្ទ: ${SHOP_STATIC_DETAILS.tel}</p>
+            <p>${now.toLocaleDateString('km-KH')} ${now.toLocaleTimeString('km-KH', {hour:'2-digit',minute:'2-digit'})}</p>
+            <p>វិក្កយបត្រ: ${orderId}</p>
+        </div>
+        <div class="divider"></div>
 
-    <table>
-        <thead><tr><th>មុខទំនិញ</th><th »ចំ.</th><th »តម្លៃ</th></tr></thead>
-        <tbody>
-            ${order.map(item => `
-                <tr>
-                    <td>${item.khmerName}${item.englishName ? ` (${item.englishName})` : ''}</td>
-                    <td>${item.quantity}</td>
-                    <td>${KHR_SYMBOL}${formatKHR((item.priceKHR || item.priceUSD) * item.quantity)}</td>
-                </tr>
-            `).join('')}
-        </tbody>
-    </table>
+        <table>
+            <thead><tr><th>មុខទំនិញ</th><th>ចំ.</th><th>តម្លៃ</th></tr></thead>
+            <tbody>
+                ${order.map(item => `
+                    <tr>
+                        <td>${item.khmerName}${item.englishName ? ` (${item.englishName})` : ''}</td>
+                        <td>${item.quantity}</td>
+                        <td>${KHR_SYMBOL}${formatKHR((item.priceKHR || item.priceUSD) * item.quantity)}</td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
 
-    <div class="divider"></div>
-    <div style="display:flex;justify-content:space-between;margin:6px 0">
-        <span>សរុបរង:</span>
-        <span>${KHR_SYMBOL}${formatKHR(subtotalKHR)}</span>
-    </div>
-    <div class="total" style="display:flex;justify-content:space-between">
-        <span>សរុបត្រូវបង់:</span>
-        <span>${KHR_SYMBOL}${formatKHR(totalKHR)}</span>
-    </div>
+        <div class="divider"></div>
+        <div class="summary">
+            <div style="display:flex;justify-content:space-between">
+                <span>សរុបរង:</span>
+                <span>${KHR_SYMBOL}${formatKHR(subtotalKHR)}</span>
+            </div>
+            <div class="total" style="display:flex;justify-content:space-between">
+                <span>សរុបត្រូវបង់:</span>
+                <span>${KHR_SYMBOL}${formatKHR(totalKHR)}</span>
+            </div>
+        </div>
 
-    <div class="qr"><img src="${qrCodeUrl}" onerror="this.style.display='none'"></div>
-    <div class="footer">សូមអរគុណ! សូមអញ្ជើញមកម្តងទៀត!</div>
+        <div class="qr"><img src="${qrCodeUrl}" onerror="this.style.display='none'"></div>
+        <div class="footer">សូមអរគុណ! សូមអញ្ជើញមកម្តងទៀត!</div>
+    </div>
 </body>
-</html>`;
+</html>
+        `);
 
-        // បិទ modal និង clear iframe ក្រោយ print រួច (ប្រហែល 3 វិនាទី)
-        const timer = setTimeout(() => {
-            if (printFrame.parentNode) {
-                printFrame.parentNode.removeChild(printFrame);
-            }
-            onClose();
-        }, 3000);
-
-        return () => {
-            clearTimeout(timer);
-            if (printFrame.parentNode) {
-                printFrame.parentNode.removeChild(printFrame);
-            }
-        };
+        receiptWindow.document.close();
+        setTimeout(() => onClose(), 1000);
 
     }, [show, order, orderId, shopName, onClose]);
 
