@@ -11,7 +11,7 @@ const SHOP_STATIC_DETAILS = {
 
 function ReceiptModal({ show, onClose, order, orderId, shopName }) {
     useEffect(() => {
-        if (!show) return;
+        if (!show || !order || order.length === 0) return;
 
         const receiptWindow = window.open(
             '',

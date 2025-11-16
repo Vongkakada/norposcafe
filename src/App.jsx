@@ -151,15 +151,18 @@ function App() {
     const clearOrder = useCallback(() => setCurrentOrder([]), []);
 
     // === សំខាន់: Save + Print ដោយមិនបង្ហាញ Modal ===
+    // កែត្រឹម function នេះក្នុង src/App.jsx
     const closeReceiptModalAndFinalizeOrder = useCallback(async () => {
         if (currentOrder.length === 0) return;
 
-        const totalKHR = currentOrder.reduce((sum, i) => sum + i.priceKHR * i.quantity, 0);
+        // 1. រក្សាទុក order សិន (សំខាន់បំផុត!)
+        const orderToSave = [...currentOrder];
+        const totalKHR = orderToSave.reduce((sum, i) => sum + i.priceKHR * i.quantity, 0);
 
         try {
             const docRef = await addDoc(collection(db, "orders"), {
                 orderIdString: currentDisplayOrderId,
-                items: currentOrder.map(i => ({
+                items: orderToSave.map(i => ({
                     khmerName: i.khmerName,
                     englishName: i.englishName || '',
                     priceKHR: i.priceKHR,
@@ -176,17 +179,15 @@ function App() {
             setAllOrders(prev => [{
                 firestoreId: docRef.id,
                 orderIdString: currentDisplayOrderId,
-                items: currentOrder,
+                items: orderToSave,
                 totalKHR,
                 date: new Date().toISOString()
             }, ...prev]);
 
-            // Clear order & increment ID
-            setCurrentOrder([]);
+            // 2. ឥឡូវទើប clear order និងបង្ហាញ receipt
+            setCurrentOrder([]);                    // ← clear ក្រោយ
             setOrderIdCounter(c => c + 1);
-
-            // Trigger print (Modal នឹងបើក Popup + Print ដោយស្វ័យប្រវត្តិ)
-            setShowReceiptModal(true);
+            setShowReceiptModal(true);              // ← បើក modal ចុងក្រោយ → orderToSave នៅតែមាន!
 
         } catch (err) {
             console.error(err);
