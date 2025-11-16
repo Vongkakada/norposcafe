@@ -1,4 +1,3 @@
-// src/components/ReceiptModal.jsx
 import React, { useState, useEffect } from "react";
 import { KHR_SYMBOL, formatKHR } from "../utils/formatters";
 import qrcode from "../assets/qrcode.jpg";
@@ -13,8 +12,6 @@ const SHOP_STATIC_DETAILS = {
 function ReceiptModal({ show, onClose, order, orderId, shopName }) {
   const [pdfUrl, setPdfUrl] = useState(null);
 
-  if (!show) return null;
-
   const now = new Date();
   const subtotalKHR = order.reduce(
     (sum, item) => sum + (item.priceKHR || item.priceUSD || 0) * item.quantity,
@@ -22,21 +19,31 @@ function ReceiptModal({ show, onClose, order, orderId, shopName }) {
   );
   const totalKHR = subtotalKHR;
 
+  const loadImage = (src) => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.onload = () => resolve(img);
+      img.onerror = reject;
+      img.src = src;
+    });
+  };
+
   const generatePDF = async () => {
+    if (!show) return; // only generate when modal is shown
+
     const pdf = new jsPDF({
       orientation: "p",
       unit: "pt",
-      format: [220, 600], // width ~80mm
+      format: [220, 600],
     });
 
     let y = 20;
 
-    // Logo
     const logoImg = await loadImage(logo);
     pdf.addImage(logoImg, "PNG", 85, y, 50, 50);
     y += 60;
 
-    // Shop info
     pdf.setFontSize(14);
     pdf.setFont("helvetica", "bold");
     pdf.text(shopName, 110, y, { align: "center" });
@@ -49,7 +56,6 @@ function ReceiptModal({ show, onClose, order, orderId, shopName }) {
     pdf.text(`Tel: ${SHOP_STATIC_DETAILS.tel}`, 110, y, { align: "center" });
     y += 18;
 
-    // Date & Invoice
     pdf.text(
       `${now.toLocaleDateString()} ${now.toLocaleTimeString()}`,
       110,
@@ -60,21 +66,15 @@ function ReceiptModal({ show, onClose, order, orderId, shopName }) {
     pdf.text(`Invoice: ${orderId}`, 110, y, { align: "center" });
     y += 18;
 
-    // Line
     pdf.setLineWidth(0.5);
     pdf.line(10, y, 210, y);
     y += 12;
 
-    // Items
     pdf.setFontSize(10);
     order.forEach((item) => {
       pdf.text(`${item.khmerName}`, 12, y);
       y += 12;
-      pdf.text(
-        `${item.englishName || ""} x${item.quantity}`,
-        12,
-        y
-      );
+      pdf.text(`${item.englishName || ""} x${item.quantity}`, 12, y);
       pdf.text(
         `${KHR_SYMBOL}${formatKHR((item.priceKHR || item.priceUSD) * item.quantity)}`,
         210 - 12,
@@ -88,30 +88,21 @@ function ReceiptModal({ show, onClose, order, orderId, shopName }) {
     pdf.line(10, y, 210, y);
     y += 12;
 
-    // Total
     pdf.setFontSize(12);
     pdf.setFont("helvetica", "bold");
-    pdf.text(
-      `Total: ${KHR_SYMBOL}${formatKHR(totalKHR)}`,
-      110,
-      y,
-      { align: "center" }
-    );
+    pdf.text(`Total: ${KHR_SYMBOL}${formatKHR(totalKHR)}`, 110, y, { align: "center" });
     y += 20;
     pdf.line(10, y, 210, y);
     y += 20;
 
-    // QR code
     const qrImg = await loadImage(qrcode);
     pdf.addImage(qrImg, "PNG", 65, y, 90, 90);
     y += 100;
 
-    // Thank you
     pdf.setFontSize(10);
     pdf.setFont("helvetica", "normal");
     pdf.text("សូមអរគុណ! សូមអញ្ជើញមកម្តងទៀត!", 110, y, { align: "center" });
 
-    // Export to Blob URL
     const blob = pdf.output("blob");
     const url = URL.createObjectURL(blob);
     setPdfUrl(url);
@@ -122,25 +113,14 @@ function ReceiptModal({ show, onClose, order, orderId, shopName }) {
     return () => {
       if (pdfUrl) URL.revokeObjectURL(pdfUrl);
     };
-  }, [order]);
-
-  const loadImage = (src) => {
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      img.crossOrigin = "anonymous";
-      img.onload = () => resolve(img);
-      img.onerror = reject;
-      img.src = src;
-    });
-  };
+  }, [show, order]); // always call hook at top level
 
   const handlePrintRawBT = () => {
     if (!pdfUrl) return;
-    // Open PDF in RawBT
-    // RawBT can print PDF if you open it via "intent://..." on Android
-    // Or user can manually open PDF in RawBT
     window.open(pdfUrl, "_blank");
   };
+
+  if (!show) return null;
 
   return (
     <div className="modal show">
