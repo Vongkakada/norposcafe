@@ -914,73 +914,6 @@ body {
     margin: 0;
 }
 
-@media print {
-    html, body {
-        width: 80mm;
-        height: 297mm;
-        margin: 0;
-        padding: 0;
-    }
-
-    /* Hide everything by default, then reveal only the receipt area */
-    body * {
-        visibility: hidden !important;
-    }
-
-    .receipt-print-area, .receipt-print-area * {
-        visibility: visible !important;
-    }
-
-    /* Remove any background graphics or colors when printing */
-    html, body, .modal, .modal-content, .receipt-print-area, .receipt-print-area * {
-        background: transparent !important;
-        background-image: none !important;
-        box-shadow: none !important;
-    }
-
-    /* Position the receipt at the top-left of the print page */
-    .receipt-print-area {
-        position: absolute !important;
-        left: 0 !important;
-        top: 10mm !important; /* respect larger top margin */
-        width: 80mm !important;
-        box-sizing: border-box !important;
-        page-break-inside: avoid !important;
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
-        background: #fff !important;
-        padding: 0 !important;
-        margin: 0 !important;
-    }
-
-    /* Remove modal overlay and controls when printing */
-    .modal {
-        background-color: transparent !important;
-    }
-    .modal-content {
-        box-shadow: none !important;
-        background: transparent !important;
-        width: auto !important;
-        max-width: none !important;
-        border-radius: 0 !important;
-        padding: 0 !important;
-    }
-
-    /* Hide action buttons and close control */
-    .print-button-container, .close-button, .btn-close-receipt, .btn-print {
-        display: none !important;
-    }
-
-    /* Adjust logo and QR sizes for printing */
-    .receipt-logo { width: 20mm !important; height: auto !important; }
-    .receipt-qr-code img { width: 60px !important; height: 60px !important; }
-
-    /* Ensure the receipt is kept on one page and not split */
-    .receipt-print-area { page-break-after: always !important; }
-}
-        padding: 8px;
-        font-size: 0.85em;
-    }
 
     .stock-table th {
         font-size: 0.8em;
@@ -1225,187 +1158,82 @@ body {
 .btn-cancel:hover {
     background-color: #777;
 }
-
-/* Print-specific styles */
-@media print {
-    body {
-        background-color: #fff;
-        margin: 0;
-        padding: 5mm;
-        font-family: 'Courier New', Courier, monospace !important;
-        font-size: 10pt;
-        color: #000 !important;
-        width: 80mm;
-    }
-    @page {
-        size: 80mm auto;
-        margin: 0;
-    }
-
-    .app-navigation,
-    .pos-container:not(.printing-sales-report) .menu-panel, 
-    .pos-container:not(.printing-sales-report) .order-panel, 
-    .modal .close-button,
-    .modal .print-button-container, 
-    .action-buttons, 
-    .report-controls, 
-    .report-actions button, 
-    .sales-report-panel:not(.print-this-report),
-    .category-tabs /* Hide category tabs when printing */ { 
-        display: none !important;
-    }
-    
-    .modal.show.printing-receipt .modal-content {
-        position: static;
-        overflow: visible;
-        background-color: transparent;
-        display: block !important;
-        box-shadow: none;
-        border-radius: 0;
-        padding: 0; margin:0;
-        width: 100%;
-        max-width: 100%;
-    }
-    .modal.show.printing-receipt .receipt-print-area {
-        display: block !important;
-        font-size: 9pt;
-    }
-     .modal.show.printing-receipt .receipt-header h3 { font-size: 1.1em; }
-     .modal.show.printing-receipt .receipt-header p, 
-     .modal.show.printing-receipt .receipt-footer, 
-     .modal.show.printing-receipt .receipt-summary-line, 
-     .modal.show.printing-receipt .receipt-items-table { font-size: 0.85em; }
-     .modal.show.printing-receipt .receipt-summary-line.total { font-size: 0.95em;}
-     .modal.show.printing-receipt .receipt-qr-code img { width: 80px; height: 80px; }
-
-    .printing-sales-report .sales-report-panel.print-this-report {
-        display: block !important;
-        background-color: #fff !important;
-        box-shadow: none !important;
-        padding: 0 !important;
-        margin: 0 !important;
-        width: 100% !important;
-        max-width: 100% !important;
-    }
-    .printing-sales-report .sales-report-panel.print-this-report h2,
-    .printing-sales-report .sales-report-panel.print-this-report h3 {
-        color: #000 !important;
-        border-color: #888 !important;
-        text-align: center;
-    }
-     .printing-sales-report .sales-report-panel.print-this-report .report-section {
-        box-shadow: none;
-        border: 1px solid #ccc;
-        margin-bottom: 10px;
-        padding: 10px;
-        background-color: #fff !important;
-    }
-    .printing-sales-report .report-data-table th,
-    .printing-sales-report .report-data-table td {
-        border: 1px solid #888 !important;
-        font-size: 9pt !important;
-    }
-    .printing-sales-report .report-data-table th {
-        background-color: #eee !important;
-    }
-
-    table { page-break-inside:auto }
-    tr    { page-break-inside:avoid; page-break-after:auto }
-    thead { display:table-header-group } 
-    tfoot { display:table-footer-group }
 }
-/* បន្ថែមនៅក្នុង CSS file របស់អ្នក */
-
-/* ==================== PRINT STYLES ==================== */
-/* Receipt Print Configuration */
+/* ==================== PRINT STYLES - FIXED FOR MOBILE PRINTERS ==================== */
 @page {
-    size: 80mm auto;
-    margin: 6mm;
+    size: 80mm auto;   /* សម្រាប់ម៉ាស៊ីន thermal 80mm (បើប្រើ 58mm ផ្លាស់ទៅ 58mm) */
+    margin: 0;
 }
 
 @media print {
-    /* Hide everything by default */
+    html, body {
+        width: 80mm !important;     /* ឬ 58mm បើម៉ាស៊ីនអ្នកជា 58mm */
+        margin: 0 !important;
+        padding: 0 !important;
+        background: white !important;
+        font-family: 'Courier New', Courier, monospace !important;
+        font-size: 10pt !important;
+        color: black !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    /* លាក់អ្វីៗទាំងអស់ */
     body * {
         visibility: hidden !important;
     }
 
-    /* Show only receipt */
+    /* បង្ហាញតែ receipt */
     .receipt-print-area,
     .receipt-print-area * {
         visibility: visible !important;
     }
 
-    /* Position receipt */
     .receipt-print-area {
         position: absolute !important;
         left: 0 !important;
         top: 0 !important;
-        width: 80mm !important;
+        width: 80mm !important;     /* ឬ 58mm */
         margin: 0 !important;
-        padding: 0 !important;
+        padding: 5mm !important;    /* បន្ថែម padding បន្តិចឲ្យស្អាត */
         box-sizing: border-box !important;
         background: white !important;
-        page-break-inside: avoid !important;
+        color: black !important;
     }
 
-    /* Clean backgrounds */
-    html, body {
-        background: white !important;
-        margin: 0 !important;
-        padding: 0 !important;
-    }
-
-    /* Remove modal styles */
+    /* លាក់ UI ទាំងអស់ */
     .modal,
-    .modal-content {
-        background: transparent !important;
-        box-shadow: none !important;
-        border: none !important;
-        padding: 0 !important;
-        margin: 0 !important;
-    }
-
-    /* Hide all UI elements */
+    .modal-content,
     .print-button-container,
     .close-button,
-    .btn-close-receipt,
     .btn-print,
+    .btn-close-receipt,
     .app-navigation,
+    .pos-container,
     .menu-panel,
     .order-panel,
-    .category-tabs,
-    .pos-container,
-    .sales-report-panel,
-    .report-view-container,
-    .stock-management-panel,
     .action-buttons,
-    .report-controls,
-    .report-actions {
+    .category-tabs,
+    .sales-report-panel,
+    .stock-management-panel {
         display: none !important;
-        visibility: hidden !important;
     }
 
-    /* Receipt logo sizing */
+    /* កែទំហំ logo និង QR */
     .receipt-logo {
         width: 20mm !important;
         height: auto !important;
         max-height: 40mm !important;
     }
 
-    /* QR code sizing */
     .receipt-qr-code img {
         width: 60px !important;
         height: 60px !important;
     }
 
-    /* Ensure black text */
-    .receipt-print-area,
-    .receipt-print-area * {
-        color: black !important;
-    }
-
-    /* Page break control */
+    /* កុំឲ្យកាត់ទំព័រ */
     .receipt-print-area {
         page-break-after: always !important;
     }
 }
+/* Print-specific styles */
