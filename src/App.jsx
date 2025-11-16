@@ -162,8 +162,8 @@ function App() {
 
     const processPayment = useCallback(() => {
         if (currentOrder.length === 0) return alert('សូមបន្ថែមទំនិញជាមុន!');
-        document.getElementById('receiptModal')?.classList.add('printing-receipt');
-        setShowReceiptModal(true);
+        //document.getElementById('receiptModal')?.classList.add('printing-receipt');
+        //setShowReceiptModal(true);
     }, [currentOrder]);
 
     const closeReceiptModalAndFinalizeOrder = useCallback(async () => {
@@ -201,8 +201,7 @@ function App() {
             setShowReceiptModal(false);
             document.getElementById('receiptModal')?.classList.remove('printing-receipt');
         }
-    }, [currentOrder, currentDisplayOrderId, exchangeRate]);
-
+    }, [currentOrder, closeReceiptModalAndFinalizeOrder]);
     const handleSoftDeleteOrder = useCallback(async (id, reason) => {
         try {
             await updateDoc(doc(db, "orders", id), {
