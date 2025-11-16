@@ -1,5 +1,7 @@
+
+
 // =====================================================
-// 3. OrderPanel.jsx (គ្មានការកែប្រែ - ដូចដើមទាំងអស់)
+// 4. OrderPanel.jsx (គ្មានការកែប្រែ)
 // =====================================================
 // src/components/OrderPanel.jsx
 import React from 'react';
@@ -15,7 +17,7 @@ function OrderPanel({
   onProcessPayment,
 }) {
   const subtotalKHR = currentOrder.reduce(
-    (sum, item) => sum + (item.priceKHR || item.priceUSD || 0) * item.quantity,
+    (sum, item) => sum + (item.priceKHR || 0) * item.quantity,
     0
   );
   const totalKHR = subtotalKHR;
@@ -30,7 +32,7 @@ function OrderPanel({
         ) : (
           currentOrder.map(item => (
             <OrderItemEntry
-              key={item.khmerName + (item.priceKHR || item.priceUSD || 0)}
+              key={item.khmerName + (item.priceKHR || 0)}
               item={item}
               onUpdateQuantity={onUpdateQuantity}
             />

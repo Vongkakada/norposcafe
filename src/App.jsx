@@ -1,4 +1,7 @@
-// src/App.jsx — កែរួចរាល់ 100%, បោះពុម្ភលឿន, ទិន្នន័យមិនបាត់, Build ជោគជ័យ (16 វិច្ឆិកា 2025)
+// =====================================================
+// 1. App.jsx (Print Receipt ដោយ Hidden Modal)
+// =====================================================
+// src/App.jsx — Print Receipt ភ្លាមដោយ Hidden Modal (16 វិច្ឆិកា 2025)
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import './App.css';
 import Header from './components/Header';
@@ -22,7 +25,11 @@ function App() {
         const saved = localStorage.getItem('orderIdCounter');
         return saved ? parseInt(saved, 10) : 1;
     });
-    const [showReceiptModal, setShowReceiptModal] = useState(false);
+    
+    // State សម្រាប់ Receipt (លាក់ពីអ្នកប្រើប្រាស់)
+    const [receiptData, setReceiptData] = useState({ order: [], orderId: '' });
+    const [triggerPrint, setTriggerPrint] = useState(false);
+    
     const [allOrders, setAllOrders] = useState([]);
     const [isLoadingOrders, setIsLoadingOrders] = useState(true);
     const [view, setView] = useState('pos');
@@ -123,7 +130,6 @@ function App() {
         }
     };
 
-    // === Save localStorage ===
     useEffect(() => localStorage.setItem('orderIdCounter', orderIdCounter.toString()), [orderIdCounter]);
     useEffect(() => localStorage.setItem('exchangeRate', exchangeRate.toString()), [exchangeRate]);
 
@@ -150,18 +156,30 @@ function App() {
 
     const clearOrder = useCallback(() => setCurrentOrder([]), []);
 
-    // === សំខាន់បំផុត: Save + Print ដោយមិនបាត់ទិន្នន័យ ===
-    const closeReceiptModalAndFinalizeOrder = useCallback(async () => {
-        if (currentOrder.length === 0) return;
+    // === ចុច "គិតលុយ" → រៀបចំទិន្នន័យ និង Trigger Print ===
+    const processPayment = useCallback(async () => {
+        if (currentOrder.length === 0) {
+            alert('សូមបន្ថែមទំនិញជាមុន!');
+            return;
+        }
 
-        // 1. រក្សាទុក order សិន (មុននឹង clear)
         const orderToSave = [...currentOrder];
+        const orderIdToShow = currentDisplayOrderId;
         const totalKHR = orderToSave.reduce((sum, i) => sum + i.priceKHR * i.quantity, 0);
 
+        // រក្សាទុកទិន្នន័យសម្រាប់ Receipt
+        setReceiptData({ 
+            order: orderToSave, 
+            orderId: orderIdToShow 
+        });
+
+        // Trigger Print (ReceiptModal នឹង print ភ្លាម)
+        setTriggerPrint(true);
+
+        // Save ទៅ Firebase
         try {
-            // Save ទៅ Firebase
             const docRef = await addDoc(collection(db, "orders"), {
-                orderIdString: currentDisplayOrderId,
+                orderIdString: orderIdToShow,
                 items: orderToSave.map(i => ({
                     khmerName: i.khmerName,
                     englishName: i.englishName || '',
@@ -175,34 +193,27 @@ function App() {
                 exchangeRateAtPurchase: exchangeRate
             });
 
-            // Update UI
             setAllOrders(prev => [{
                 firestoreId: docRef.id,
-                orderIdString: currentDisplayOrderId,
+                orderIdString: orderIdToShow,
                 items: orderToSave,
                 totalKHR,
                 date: new Date().toISOString()
             }, ...prev]);
 
-            // 2. ទើប clear order និងបង្ហាញ receipt
-            setCurrentOrder([]);
-            setOrderIdCounter(c => c + 1);
-            setShowReceiptModal(true); // បើក ReceiptModal → វាបោះពុម្ភភ្លាម
-
         } catch (err) {
             console.error(err);
             alert("មានបញ្ហារក្សាទុក Order: " + err.message);
         }
-    }, [currentOrder, currentDisplayOrderId, exchangeRate]);
 
-    // === ចុច "គិតលុយ" → Save + Print ភ្លាម ===
-    const processPayment = useCallback(() => {
-        if (currentOrder.length === 0) {
-            alert('សូមបន្ថែមទំនិញជាមុន!');
-            return;
-        }
-        closeReceiptModalAndFinalizeOrder();
-    }, [currentOrder, closeReceiptModalAndFinalizeOrder]);
+        // Clear order និង reset trigger
+        setCurrentOrder([]);
+        setOrderIdCounter(c => c + 1);
+        
+        // Reset trigger បន្ទាប់ពី print រួច
+        setTimeout(() => setTriggerPrint(false), 500);
+
+    }, [currentOrder, currentDisplayOrderId, exchangeRate]);
 
     const handleSoftDeleteOrder = useCallback(async (id, reason) => {
         try {
@@ -256,16 +267,17 @@ function App() {
                 </div>
             )}
 
-            {/* ReceiptModal បើក Popup + Print → មើលមិនឃើញនៅលើអេក្រង់ */}
+            {/* Receipt Modal ដែលលាក់ពីអ្នកប្រើប្រាស់ */}
             <ReceiptModal
-                show={showReceiptModal}
-                onClose={() => setShowReceiptModal(false)}
-                order={currentOrder}
-                orderId={currentDisplayOrderId}
+                order={receiptData.order}
+                orderId={receiptData.orderId}
                 shopName={SHOP_NAME}
+                triggerPrint={triggerPrint}
             />
         </>
     );
 }
 
 export default App;
+
+
