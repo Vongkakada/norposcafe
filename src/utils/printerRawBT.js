@@ -11,16 +11,16 @@ const SHOP_STATIC_DETAILS = {
 // \x1B, \x1D, \x1C, \x0A, etc., are ESC/POS codes
 // =========================================================
 
-const ESC = '\x1B';
-const GS = '\x1D';
-const CENTER = ESC + '\x61' + '\x01';
-const LEFT = ESC + '\x61' + '\x00';
-const BOLD_ON = ESC + '\x45' + '\x01';
-const BOLD_OFF = ESC + '\x45' + '\x00';
-const DOUBLE_HEIGHT_WIDTH = GS + '\x21' + '\x11'; // Font size x2
-const NORMAL_FONT = GS + '\x21' + '\x00';
-const CUT_PAPER = GS + '\x56' + '\x01';
-const LINE = '----------------------------------------\n'; // 40 dashes for 80mm printer
+// បញ្ហាត្រូវបានដោះស្រាយនៅទីនេះ
+const CENTER = `${ESC}\x61\x01`; 
+const LEFT = `${ESC}\x61\x00`;
+const BOLD_ON = `${ESC}\x45\x01`; 
+const BOLD_OFF = `${ESC}\x45\x00`;
+const DOUBLE_HEIGHT_WIDTH = `${GS}\x21\x11`; 
+const NORMAL_FONT = `${GS}\x21\x00`;
+const CUT_PAPER = `${GS}\x56\x01`;
+
+const LINE = '----------------------------------------\n'; 
 
 /**
  * បង្កើត String វិក័យបត្រជាទ្រង់ទ្រាយ Raw Text (ESC/POS)
