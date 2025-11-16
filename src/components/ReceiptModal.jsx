@@ -1,8 +1,9 @@
 // src/components/ReceiptModal.jsx
-import React, { useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { KHR_SYMBOL, formatKHR } from "../utils/formatters";
 import qrcode from "../assets/qrcode.jpg";
 import logo from "../assets/logo.png";
+import jsPDF from "jspdf";
 
 const SHOP_STATIC_DETAILS = {
   address: "ផ្ទះលេខ 137 , ផ្លូវ 223, កំពង់ចាម",
@@ -10,7 +11,7 @@ const SHOP_STATIC_DETAILS = {
 };
 
 function ReceiptModal({ show, onClose, order, orderId, shopName }) {
-  const receiptRef = useRef(null);
+  const [pdfUrl, setPdfUrl] = useState(null);
 
   if (!show) return null;
 
@@ -21,185 +22,146 @@ function ReceiptModal({ show, onClose, order, orderId, shopName }) {
   );
   const totalKHR = subtotalKHR;
 
-  // Draw receipt on canvas and print via RawBT
-  const handlePrintRawBT = async () => {
-    try {
-      const canvas = document.createElement("canvas");
-      const ctx = canvas.getContext("2d");
+  const generatePDF = async () => {
+    const pdf = new jsPDF({
+      orientation: "p",
+      unit: "pt",
+      format: [220, 600], // width ~80mm
+    });
 
-      const width = 384; // 80mm printer
-      const padding = 12;
-      const lineHeight = 20;
-      let y = padding;
+    let y = 20;
 
-      const height =
-        70 + // logo
-        lineHeight * 6 + // header
-        order.length * lineHeight * 2.5 + // items
-        lineHeight * 3 + // total
-        100 + // QR
-        lineHeight * 2 + // thank you
-        padding * 3;
+    // Logo
+    const logoImg = await loadImage(logo);
+    pdf.addImage(logoImg, "PNG", 85, y, 50, 50);
+    y += 60;
 
-      canvas.width = width;
-      canvas.height = height;
+    // Shop info
+    pdf.setFontSize(14);
+    pdf.setFont("helvetica", "bold");
+    pdf.text(shopName, 110, y, { align: "center" });
+    y += 18;
 
-      // White background
-      ctx.fillStyle = "#fff";
-      ctx.fillRect(0, 0, width, height);
-      ctx.fillStyle = "#000";
+    pdf.setFontSize(10);
+    pdf.setFont("helvetica", "normal");
+    pdf.text(SHOP_STATIC_DETAILS.address, 110, y, { align: "center" });
+    y += 14;
+    pdf.text(`Tel: ${SHOP_STATIC_DETAILS.tel}`, 110, y, { align: "center" });
+    y += 18;
 
-      // Load logo
-      const logoImg = await loadImage(logo);
-      const logoH = 50;
-      const logoW = 50;
-      ctx.drawImage(logoImg, (width - logoW) / 2, y, logoW, logoH);
-      y += logoH + 8;
+    // Date & Invoice
+    pdf.text(
+      `${now.toLocaleDateString()} ${now.toLocaleTimeString()}`,
+      110,
+      y,
+      { align: "center" }
+    );
+    y += 14;
+    pdf.text(`Invoice: ${orderId}`, 110, y, { align: "center" });
+    y += 18;
 
-      // Shop name
-      ctx.font = "bold 16px Arial";
-      ctx.textAlign = "center";
-      ctx.fillText(shopName, width / 2, y);
-      y += lineHeight;
+    // Line
+    pdf.setLineWidth(0.5);
+    pdf.line(10, y, 210, y);
+    y += 12;
 
-      // Address & Tel
-      ctx.font = "12px Arial";
-      ctx.fillText(SHOP_STATIC_DETAILS.address, width / 2, y);
-      y += lineHeight;
-      ctx.fillText(`Tel: ${SHOP_STATIC_DETAILS.tel}`, width / 2, y);
-      y += lineHeight;
-
-      // Date & Invoice
-      ctx.font = "11px Arial";
-      ctx.fillText(`${now.toLocaleDateString()} ${now.toLocaleTimeString()}`, width / 2, y);
-      y += lineHeight;
-      ctx.fillText(`Invoice: ${orderId}`, width / 2, y);
-      y += lineHeight + 4;
-
-      // Line
-      drawLine(ctx, padding, y, width - padding, y);
-      y += 8;
-
-      // Items
-      ctx.textAlign = "left";
-      ctx.font = "12px Arial";
-      order.forEach((item) => {
-        const name = `${item.khmerName}`;
-        ctx.fillText(name, padding, y);
-        y += lineHeight;
-
-        const detail = `${item.englishName || ""} x${item.quantity}`;
-        ctx.fillText(detail, padding + 4, y);
-
-        const price = `${KHR_SYMBOL}${formatKHR((item.priceKHR || item.priceUSD) * item.quantity)}`;
-        ctx.textAlign = "right";
-        ctx.fillText(price, width - padding, y);
-        ctx.textAlign = "left";
-        y += lineHeight + 2;
-      });
-
-      y += 4;
-      drawLine(ctx, padding, y, width - padding, y);
-      y += lineHeight;
-
-      // Total
-      ctx.font = "bold 14px Arial";
-      ctx.textAlign = "center";
-      ctx.fillText(`Total: ${KHR_SYMBOL}${formatKHR(totalKHR)}`, width / 2, y);
-      y += lineHeight + 4;
-
-      drawLine(ctx, padding, y, width - padding, y);
+    // Items
+    pdf.setFontSize(10);
+    order.forEach((item) => {
+      pdf.text(`${item.khmerName}`, 12, y);
       y += 12;
+      pdf.text(
+        `${item.englishName || ""} x${item.quantity}`,
+        12,
+        y
+      );
+      pdf.text(
+        `${KHR_SYMBOL}${formatKHR((item.priceKHR || item.priceUSD) * item.quantity)}`,
+        210 - 12,
+        y,
+        { align: "right" }
+      );
+      y += 16;
+    });
 
-      // QR Code
-      const qrImg = await loadImage(qrcode);
-      const qrSize = 90;
-      ctx.drawImage(qrImg, (width - qrSize) / 2, y, qrSize, qrSize);
-      y += qrSize + 10;
+    y += 4;
+    pdf.line(10, y, 210, y);
+    y += 12;
 
-      // Thank you
-      ctx.font = "12px Arial";
-      ctx.fillText("សូមអរគុណ! សូមអញ្ជើញមកម្តងទៀត!", width / 2, y);
+    // Total
+    pdf.setFontSize(12);
+    pdf.setFont("helvetica", "bold");
+    pdf.text(
+      `Total: ${KHR_SYMBOL}${formatKHR(totalKHR)}`,
+      110,
+      y,
+      { align: "center" }
+    );
+    y += 20;
+    pdf.line(10, y, 210, y);
+    y += 20;
 
-      // Convert to Base64 and send to RawBT
-      canvas.toBlob((blob) => {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          const base64 = reader.result.split(",")[1];
-          window.location.href = `rawbt:image,${base64}`;
-        };
-        reader.readAsDataURL(blob);
-      }, "image/png");
-    } catch (error) {
-      console.error("Print error:", error);
-      alert("មានបញ្ហាក្នុងការបោះពុម្ពវិក្កយបត្រ");
-    }
+    // QR code
+    const qrImg = await loadImage(qrcode);
+    pdf.addImage(qrImg, "PNG", 65, y, 90, 90);
+    y += 100;
+
+    // Thank you
+    pdf.setFontSize(10);
+    pdf.setFont("helvetica", "normal");
+    pdf.text("សូមអរគុណ! សូមអញ្ជើញមកម្តងទៀត!", 110, y, { align: "center" });
+
+    // Export to Blob URL
+    const blob = pdf.output("blob");
+    const url = URL.createObjectURL(blob);
+    setPdfUrl(url);
   };
 
-  const loadImage = (src) =>
-    new Promise((resolve, reject) => {
+  useEffect(() => {
+    generatePDF();
+    return () => {
+      if (pdfUrl) URL.revokeObjectURL(pdfUrl);
+    };
+  }, [order]);
+
+  const loadImage = (src) => {
+    return new Promise((resolve, reject) => {
       const img = new Image();
       img.crossOrigin = "anonymous";
       img.onload = () => resolve(img);
       img.onerror = reject;
       img.src = src;
     });
+  };
 
-  const drawLine = (ctx, x1, y1, x2, y2) => {
-    ctx.beginPath();
-    ctx.moveTo(x1, y1);
-    ctx.lineTo(x2, y2);
-    ctx.strokeStyle = "#000";
-    ctx.lineWidth = 1;
-    ctx.stroke();
+  const handlePrintRawBT = () => {
+    if (!pdfUrl) return;
+    // Open PDF in RawBT
+    // RawBT can print PDF if you open it via "intent://..." on Android
+    // Or user can manually open PDF in RawBT
+    window.open(pdfUrl, "_blank");
   };
 
   return (
-    <div className="modal show" id="receiptModal">
+    <div className="modal show">
       <div className="modal-content">
-        <span className="close-button" onClick={onClose}>
-          ×
-        </span>
+        <span className="close-button" onClick={onClose}>×</span>
 
-        <div className="receipt-preview" ref={receiptRef}>
-          <div className="receipt-logo">
-            <img src={logo} alt="logo" style={{ width: 80 }} />
-          </div>
-          <p>{shopName}</p>
-          <p>{SHOP_STATIC_DETAILS.address}</p>
-          <p>Tel: {SHOP_STATIC_DETAILS.tel}</p>
-          <p>
-            Date: {now.toLocaleDateString()} {now.toLocaleTimeString()}
-          </p>
-          <p>Invoice: {orderId}</p>
-          <hr />
-          {order.map((item, i) => (
-            <div key={i}>
-              <p>
-                {item.khmerName} ({item.englishName || ""}) x {item.quantity}
-              </p>
-              <p>
-                {KHR_SYMBOL}
-                {formatKHR((item.priceKHR || item.priceUSD) * item.quantity)}
-              </p>
-            </div>
-          ))}
-          <hr />
-          <p>
-            Total: {KHR_SYMBOL}
-            {formatKHR(totalKHR)}
-          </p>
-          <img src={qrcode} alt="QR" style={{ width: 80 }} />
-          <p>សូមអរគុណ! សូមអញ្ជើញមកម្តងទៀត!</p>
+        <div className="receipt-preview">
+          {pdfUrl ? (
+            <iframe
+              src={pdfUrl}
+              title="Receipt Preview"
+              style={{ width: "100%", height: "400px", border: "none" }}
+            />
+          ) : (
+            <p>Generating PDF...</p>
+          )}
         </div>
 
         <div className="print-button-container">
-          <button className="btn-close-receipt" onClick={onClose}>
-            បោះបង់
-          </button>
-          <button className="btn-print" onClick={handlePrintRawBT}>
-            បោះពុម្ពវិក្កយបត្រ
-          </button>
+          <button className="btn-close-receipt" onClick={onClose}>បោះបង់</button>
+          <button className="btn-print" onClick={handlePrintRawBT}>បោះពុម្ពវិក្កយបត្រ</button>
         </div>
       </div>
     </div>
