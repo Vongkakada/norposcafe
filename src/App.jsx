@@ -1,4 +1,4 @@
-// src/App.jsx — ចុងក្រោយបំផុត ដំណើរការ 100% (16 វិច្ឆិកា 2025)
+// src/App.jsx — កែរួចរាល់ 100%, Build ជោគជ័យ, មិនបង្ហាញ Modal (16 វិច្ឆិកា 2025)
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import './App.css';
 import Header from './components/Header';
@@ -30,8 +30,6 @@ function App() {
         const saved = localStorage.getItem('exchangeRate');
         return saved ? parseFloat(saved) : DEFAULT_EXCHANGE_RATE;
     });
-
-    // Stock: ទទេតាំងពីដំបូង រង់ចាំអ្នកបញ្ចូលដោយដៃ
     const [stockData, setStockData] = useState(() => {
         const saved = localStorage.getItem('stockData');
         return saved ? JSON.parse(saved) : {};
@@ -39,13 +37,12 @@ function App() {
 
     const currentDisplayOrderId = useMemo(() => generateOrderId(orderIdCounter), [orderIdCounter]);
 
-    // 1. ទាញ Stock ពី Firebase (បើមាន)
+    // === ទាញ Stock & Orders ===
     useEffect(() => {
         const fetchStock = async () => {
             try {
                 const snapshot = await getDocs(collection(db, "stock"));
                 if (snapshot.empty) return;
-
                 const fetched = {};
                 snapshot.forEach(doc => {
                     const d = doc.data();
@@ -61,14 +58,11 @@ function App() {
                     };
                 });
                 setStockData(fetched);
-            } catch (err) {
-                console.error("Fetch stock error:", err);
-            }
+            } catch (err) { console.error("Fetch stock error:", err); }
         };
         fetchStock();
     }, []);
 
-    // 2. ទាញ Orders
     useEffect(() => {
         const fetchOrders = async () => {
             setIsLoadingOrders(true);
@@ -81,16 +75,13 @@ function App() {
                     date: doc.data().date?.toDate?.()?.toISOString() || doc.data().date
                 }));
                 setAllOrders(orders);
-            } catch (err) {
-                console.error("Fetch orders error:", err);
-            } finally {
-                setIsLoadingOrders(false);
-            }
+            } catch (err) { console.error("Fetch orders error:", err); }
+            finally { setIsLoadingOrders(false); }
         };
         fetchOrders();
     }, []);
 
-    // 3. Sync Stock ទៅ Firebase + localStorage (មុខងារសំខាន់!)
+    // === Sync Stock ===
     const updateStockAndSync = async (newStockData) => {
         setStockData(newStockData);
         localStorage.setItem('stockData', JSON.stringify(newStockData));
@@ -119,7 +110,6 @@ function App() {
                 }
             });
 
-            // លុបចោល items ដែលគ្មានទៀត
             const snapshot = await getDocs(collection(db, "stock"));
             snapshot.forEach(d => {
                 if (!currentIds.has(d.id)) batch.delete(d.ref);
@@ -133,7 +123,7 @@ function App() {
         }
     };
 
-    // Save counter & rate
+    // === Save localStorage ===
     useEffect(() => localStorage.setItem('orderIdCounter', orderIdCounter.toString()), [orderIdCounter]);
     useEffect(() => localStorage.setItem('exchangeRate', exchangeRate.toString()), [exchangeRate]);
 
@@ -160,14 +150,9 @@ function App() {
 
     const clearOrder = useCallback(() => setCurrentOrder([]), []);
 
-    const processPayment = useCallback(() => {
-        if (currentOrder.length === 0) return alert('សូមបន្ថែមទំនិញជាមុន!');
-        //document.getElementById('receiptModal')?.classList.add('printing-receipt');
-        //setShowReceiptModal(true);
-    }, [currentOrder]);
-
+    // === សំខាន់: Save + Print ដោយមិនបង្ហាញ Modal ===
     const closeReceiptModalAndFinalizeOrder = useCallback(async () => {
-        if (currentOrder.length === 0) return setShowReceiptModal(false);
+        if (currentOrder.length === 0) return;
 
         const totalKHR = currentOrder.reduce((sum, i) => sum + i.priceKHR * i.quantity, 0);
 
@@ -187,21 +172,37 @@ function App() {
                 exchangeRateAtPurchase: exchangeRate
             });
 
+            // Update UI
             setAllOrders(prev => [{
-                ...docRef.data(),
                 firestoreId: docRef.id,
+                orderIdString: currentDisplayOrderId,
+                items: currentOrder,
+                totalKHR,
                 date: new Date().toISOString()
             }, ...prev]);
 
+            // Clear order & increment ID
             setCurrentOrder([]);
             setOrderIdCounter(c => c + 1);
+
+            // Trigger print (Modal នឹងបើក Popup + Print ដោយស្វ័យប្រវត្តិ)
+            setShowReceiptModal(true);
+
         } catch (err) {
+            console.error(err);
             alert("មានបញ្ហារក្សាទុក Order: " + err.message);
-        } finally {
-            setShowReceiptModal(false);
-            document.getElementById('receiptModal')?.classList.remove('printing-receipt');
         }
+    }, [currentOrder, currentDisplayOrderId, exchangeRate]);
+
+    // === ចុចគិតលុយ → Save + Print ភ្លាម (គ្មាន Modal លើអេក្រង់) ===
+    const processPayment = useCallback(() => {
+        if (currentOrder.length === 0) {
+            alert('សូមបន្ថែមទំនិញជាមុន!');
+            return;
+        }
+        closeReceiptModalAndFinalizeOrder(); // ← ធ្វើការទាំងអស់នៅទីនេះ
     }, [currentOrder, closeReceiptModalAndFinalizeOrder]);
+
     const handleSoftDeleteOrder = useCallback(async (id, reason) => {
         try {
             await updateDoc(doc(db, "orders", id), {
@@ -250,17 +251,15 @@ function App() {
 
             {!isLoadingOrders && view === 'stock' && (
                 <div className="pos-container report-view-container">
-                    <StockManagement
-                        stockData={stockData}
-                        onUpdateStock={updateStockAndSync}   // សំខាន់បំផុត!
-                    />
+                    <StockManagement stockData={stockData} onUpdateStock={updateStockAndSync} />
                 </div>
             )}
 
+            {/* Modal នៅតែមាន ប៉ុន្តែមើលមិនឃើញ → គ្រាន់តែប្រើបើក Popup Print */}
             <ReceiptModal
                 id="receiptModal"
                 show={showReceiptModal}
-                onClose={closeReceiptModalAndFinalizeOrder}
+                onClose={() => setShowReceiptModal(false)}
                 order={currentOrder}
                 orderId={currentDisplayOrderId}
                 exchangeRate={exchangeRate}
