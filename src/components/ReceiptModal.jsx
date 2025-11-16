@@ -10,233 +10,156 @@ const SHOP_STATIC_DETAILS = {
 };
 
 function ReceiptModal({ show, onClose, order, orderId, shopName }) {
-
     useEffect(() => {
         if (!show) return;
 
-        const receiptWindow = window.open('', '_blank', 'width=800,height=900');
+        // បើក Tab ថ្មីតូចខ្លី (400x600px) ដើម្បីមើល Preview ស្អាត
+        const receiptWindow = window.open(
+            '',
+            '_blank',
+            'width=420,height=700,scrollbars=no,resizable=yes'
+        );
 
-        if (receiptWindow) {
-            const now = new Date();
-            const subtotalKHR = order.reduce(
-                (sum, item) => sum + (item.priceKHR || item.priceUSD || 0) * item.quantity,
-                0
-            );
-            const totalKHR = subtotalKHR;
+        if (!receiptWindow) {
+            alert('សូមអនុញ្ញាត Pop-up ដើម្បីបោះពុម្ពវិក្កយបត្រ');
+            onClose();
+            return;
+        }
 
-            const safeShopNameForQR = shopName.replace(/\s+/g, '_');
-            const qrData = `ORDER_ID:${orderId};TOTAL_KHR:${formatKHR(totalKHR)};SHOP_NAME:${safeShopNameForQR}`;
-            const qrCodeUrl = qrcode + `?data=${encodeURIComponent(qrData)}`;
+        const now = new Date();
+        const subtotalKHR = order.reduce(
+            (sum, item) => sum + (item.priceKHR || item.priceUSD || 0) * item.quantity,
+            0
+        );
+        const totalKHR = subtotalKHR;
 
-            receiptWindow.document.write(`
+        const safeShopNameForQR = shopName.replace(/\s+/g, '_');
+        const qrData = `ORDER_ID:${orderId};TOTAL_KHR:${formatKHR(totalKHR)};SHOP_NAME:${safeShopNameForQR}`;
+        const qrCodeUrl = qrcode + `?data=${encodeURIComponent(qrData)}`;
+
+        receiptWindow.document.write(`
 <!DOCTYPE html>
 <html lang="km">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=80mm, initial-scale=1.0">
     <title>វិក្កយបត្រ #${orderId}</title>
-
     <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            margin: 0;
-            padding: 20mm;
             font-family: 'Kantumruy Pro', sans-serif;
-            background: white;
-            color: black;
-        }
-
-        .receipt-container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 30px 40px;
-            border: 3px double #333;
-            border-radius: 12px;
-            background: white;
-            box-shadow: 0 0 20px rgba(0,0,0,0.1);
-        }
-
-        .receipt-logo-top {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-        .receipt-logo {
-            width: 100px;
-            height: auto;
-            border-radius: 10px;
-        }
-
-        .receipt-header h3 {
-            text-align: center;
-            font-size: 2.2em;
-            margin: 10px 0;
-            font-weight: bold;
-            color: #A0522D;
-        }
-
-        .receipt-header p {
-            text-align: center;
-            font-size: 1.3em;
-            margin: 6px 0;
-            color: #333;
-        }
-
-        .receipt-divider {
-            border-top: 3px double #333;
-            margin: 20px 0;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 20px 0;
-            font-size: 1.4em;
-        }
-
-        th {
-            background: #A0522D;
-            color: white;
-            padding: 12px 8px;
-            font-weight: bold;
-        }
-
-        td {
-            padding: 12px 8px;
-            border-bottom: 1px solid #ccc;
-        }
-
-        th:nth-child(2), td:nth-child(2) { text-align: center; }
-        th:last-child, td:last-child { text-align: right; }
-
-        .receipt-summary-line {
+            background: #f9f9f9;
+            padding: 8px;
             display: flex;
-            justify-content: space-between;
-            font-size: 1.6em;
-            margin: 10px 0;
-            font-weight: 500;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
         }
-
-        .receipt-summary-line.total {
-            font-size: 2em !important;
-            font-weight: bold;
-            color: #A0522D;
-            border-top: 3px double #333;
-            padding-top: 12px;
-            margin-top: 20px;
-        }
-
-        .receipt-qr-code {
-            text-align: center;
-            margin: 30px 0;
-        }
-
-        .receipt-qr-code img {
-            width: 180px;
-            height: 180px;
-            padding: 15px;
-            border: 3px solid #A0522D;
-            border-radius: 15px;
+        .receipt {
+            width: 80mm;
             background: white;
+            padding: 12px 8px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            font-size: 10pt;
+            line-height: 1.45;
         }
-
-        .receipt-footer {
-            text-align: center;
-            margin-top: 40px;
-            font-size: 1.5em;
+        .logo { text-align: center; margin-bottom: 10px; }
+        .logo img { width: 50px; height: auto; }
+        .header { text-align: center; margin-bottom: 10px; }
+        .header h3 { font-size: 14pt; margin: 6px 0 4px; font-weight: bold; }
+        .header p { font-size: 9pt; margin: 3px 0; color: #444; }
+        .divider { border-top: 1px dashed #000; margin: 8px 0; }
+        table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 9.5pt; }
+        th { background: #f0f0f0; padding: 5px 3px; font-weight: bold; font-size: 9pt; }
+        td { padding: 4px 3px; border-bottom: 1px dotted #aaa; }
+        td:nth-child(2) { text-align: center; }
+        td:last-child { text-align: right; }
+        .summary { margin: 8px 0; font-size: 10.5pt; }
+        .total {
+            font-size: 13pt !important;
             font-weight: bold;
-            color: #A0522D;
-            font-style: italic;
+            border-top: 2px solid #000;
+            padding-top: 6px;
+            margin-top: 8px;
         }
+        .qr { text-align: center; margin: 12px 0; }
+        .qr img { width: 55mm; height: 55mm; padding: 4px; border: 1px solid #000; background: white; }
+        .footer { text-align: center; margin-top: 12px; font-weight: bold; font-size: 10pt; }
 
-        /* ==================== សំខាន់បំផុត: Print ធំស្អាត ==================== */
+        /* Print ចេញមកត្រឹមត្រូវ 80mm */
         @media print {
-            @page {
-                size: A4;           /* ឬ Letter */
-                margin: 10mm;
-            }
-
-            body {
-                padding: 10mm;
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-            }
-
-            .receipt-container {
-                border: 4px double #333;
-                padding: 40px;
+            @page { size: 80mm auto; margin: 0; }
+            body { background: white; padding: 0; margin: 0; }
+            .receipt {
+                width: 80mm;
+                border: none;
                 box-shadow: none;
+                padding: 10px 6px;
             }
-
-            /* បើចង់ឲ្យធំជាង 50% ទៀត អាចប្រើ transform */
-            /* .receipt-container { transform: scale(1.5); transform-origin: top left; } */
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
         }
     </style>
 </head>
+<body onload="setTimeout(() => window.print(), 600)">
+    <div class="receipt">
+        <div class="logo">
+            <img src="${logo}" onerror="this.style.display='none'">
+        </div>
+        <div class="header">
+            <h3>${shopName}</h3>
+            <p>${SHOP_STATIC_DETAILS.address}</p>
+            <p>ទូរស័ព្ទ: ${SHOP_STATIC_DETAILS.tel}</p>
+            <p>កាលបរិច្ឆេទ: ${now.toLocaleDateString('km-KH')} ${now.toLocaleTimeString('km-KH', {hour: '2-digit', minute: '2-digit'})}</p>
+            <p>លេខវិក្កយបត្រ: ${orderId}</p>
+        </div>
+        <div class="divider"></div>
 
-<body onload="window.print()">
-<div class="receipt-container">
-    <div class="receipt-logo-top">
-        <img src="${logo}" class="receipt-logo" onerror="this.style.display='none'">
+        <table>
+            <thead>
+                <tr><th>មុខទំនិញ</th><th>ចំនួន</th><th>តម្លៃ</th></tr>
+            </thead>
+            <tbody>
+                ${order.map(item => `
+                    <tr>
+                        <td>${item.khmerName}${item.englishName ? ` (${item.englishName})` : ''}</td>
+                        <td>${item.quantity}</td>
+                        <td>${KHR_SYMBOL}${formatKHR((item.priceKHR || item.priceUSD) * item.quantity)}</td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+
+        <div class="divider"></div>
+        <div class="summary">
+            <div style="display:flex;justify-content:space-between">
+                <span>សរុបរង:</span>
+                <span>${KHR_SYMBOL}${formatKHR(subtotalKHR)}</span>
+            </div>
+            <div class="total" style="display:flex;justify-content:space-between">
+                <span>សរុបត្រូវបង់:</span>
+                <span>${KHR_SYMBOL}${formatKHR(totalKHR)}</span>
+            </div>
+        </div>
+
+        <div class="qr">
+            <img src="${qrCodeUrl}" onerror="this.style.display='none'">
+        </div>
+
+        <div class="footer">
+            សូមអរគុណច្រើន! សូមអញ្ជើញមកម្តងទៀត!
+        </div>
     </div>
-
-    <div class="receipt-header">
-        <h3>${shopName}</h3>
-        <p>${SHOP_STATIC_DETAILS.address}</p>
-        <p>ទូរស័ព្ទ: ${SHOP_STATIC_DETAILS.tel}</p>
-        <p>កាលបរិច្ឆេទ: ${now.toLocaleDateString('km-KH')} ${now.toLocaleTimeString('km-KH', {hour: '2-digit', minute: '2-digit'})}</p>
-        <p>លេខវិក្កយបត្រ: ${orderId}</p>
-    </div>
-
-    <div class="receipt-divider"></div>
-
-    <table>
-        <thead>
-            <tr>
-                <th>មុខទំនិញ</th>
-                <th>ចំនួន</th>
-                <th>តម្លៃ (${KHR_SYMBOL})</th>
-            </tr>
-        </thead>
-        <tbody>
-            ${order.map(item => `
-                <tr>
-                    <td>${item.khmerName}${item.englishName ? ` (${item.englishName})` : ''}</td>
-                    <td>${item.quantity}</td>
-                    <td>${KHR_SYMBOL}${formatKHR((item.priceKHR || item.priceUSD) * item.quantity)}</td>
-                </tr>
-            `).join('')}
-        </tbody>
-    </table>
-
-    <div class="receipt-divider"></div>
-
-    <div class="receipt-summary-line">
-        <span>សរុបរង:</span>
-        <span>${KHR_SYMBOL}${formatKHR(subtotalKHR)}</span>
-    </div>
-
-    <div class="receipt-summary-line total">
-        <span>សរុបត្រូវបង់:</span>
-        <span>${KHR_SYMBOL}${formatKHR(totalKHR)}</span>
-    </div>
-
-    <div class="receipt-qr-code">
-        <img src="${qrCodeUrl}" onerror="this.style.display='none'">
-    </div>
-
-    <div class="receipt-footer">
-        សូមអរគុណច្រើន! សូមអញ្ជើញមកម្តងទៀត!
-    </div>
-</div>
 </body>
 </html>
-            `);
+        `);
 
-            receiptWindow.document.close();
-        }
+        receiptWindow.document.close();
 
-        // បិទ modal ដើម (បើមិនចង់បិទ អាចលុបចោល)
-        setTimeout(() => onClose(), 500);
+        // បិទ modal ដើម
+        setTimeout(() => onClose(), 1000);
 
     }, [show, order, orderId, shopName, onClose]);
 
