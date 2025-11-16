@@ -14,107 +14,121 @@ function ReceiptModal({ show, onClose, order, orderId, shopName }) {
     useEffect(() => {
         if (!show) return;
 
-        // បើក receipt ក្នុង page ថ្មី
-        const receiptWindow = window.open('', '_blank', 'width=400,height=600');
-        
-        if (receiptWindow) {
-            const now = new Date();
-            const subtotalKHR = order.reduce((sum, item) => sum + (item.priceKHR || item.priceUSD || 0) * item.quantity, 0);
-            const totalKHR = subtotalKHR;
+        // បង្កើត hidden iframe សម្រាប់ print
+        const printFrame = document.createElement('iframe');
+        printFrame.style.position = 'fixed';
+        printFrame.style.right = '0';
+        printFrame.style.bottom = '0';
+        printFrame.style.width = '0';
+        printFrame.style.height = '0';
+        printFrame.style.border = '0';
+        document.body.appendChild(printFrame);
 
-            const safeShopNameForQR = shopName.replace(/\s+/g, '_');
-            const qrData = `ORDER_ID:${orderId};TOTAL_KHR:${formatKHR(totalKHR)};SHOP_NAME:${safeShopNameForQR}`;
-            const qrCodeUrl = qrcode + `?data=${encodeURIComponent(qrData)}`;
+        const now = new Date();
+        const subtotalKHR = order.reduce((sum, item) => sum + (item.priceKHR || item.priceUSD || 0) * item.quantity, 0);
+        const totalKHR = subtotalKHR;
 
-            // សរសេរ HTML ទៅក្នុង window ថ្មី
-            receiptWindow.document.write(`
+        const safeShopNameForQR = shopName.replace(/\s+/g, '_');
+        const qrData = `ORDER_ID:${orderId};TOTAL_KHR:${formatKHR(totalKHR)};SHOP_NAME:${safeShopNameForQR}`;
+        const qrCodeUrl = qrcode + `?data=${encodeURIComponent(qrData)}`;
+
+        // សរសេរ HTML ទៅក្នុង iframe
+        const frameDoc = printFrame.contentDocument || printFrame.contentWindow.document;
+        frameDoc.open();
+        frameDoc.write(`
 <!DOCTYPE html>
 <html lang="km">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>វិក្កយបត្រ #${orderId}</title>
     <link href="https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@300;400;500;700&display=swap" rel="stylesheet">
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         :root {
-            --primary-color: #A0522D;
-            --secondary-color: #D2B48C;
-            --accent-color: #FF8C00;
-            --surface-color: #FFFFFF;
-            --text-color: #4A3B31;
-            --border-color: #E0D6CC;
             --font-family: 'Kantumruy Pro', sans-serif;
         }
 
-        body {
+        html, body {
+            width: 100%;
+            height: 100%;
             margin: 0;
-            padding: 10px;
-            background-color: #f5f5f5;
+            padding: 0;
+            background: white;
+        }
+
+        body {
             font-family: var(--font-family);
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 10mm 0;
         }
 
         .receipt-container {
-            background: white;
-            padding: 15px;
-            margin: 0 auto;
             width: 80mm;
-            max-width: 80mm;
-            box-sizing: border-box;
+            padding: 5mm;
+            background: white;
         }
 
         .receipt-print-area {
             font-family: 'Courier New', Courier, monospace;
-            font-size: 11pt;
+            font-size: 13pt;
             color: #000;
             width: 100%;
         }
 
         .receipt-logo-top {
             text-align: center;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
         }
 
         .receipt-logo {
-            width: 60px;
+            width: 70px;
             height: auto;
-            max-height: 60px;
+            max-height: 70px;
         }
 
         .receipt-header {
             text-align: center;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
         }
 
         .receipt-header h3 {
-            margin: 5px 0;
+            margin: 6px 0;
             font-family: var(--font-family);
-            font-size: 1.3em;
+            font-size: 1.5em;
             font-weight: bold;
             color: #000;
         }
 
         .receipt-header p {
-            margin: 2px 0;
-            font-size: 0.9em;
-            line-height: 1.4;
+            margin: 3px 0;
+            font-size: 1em;
+            line-height: 1.5;
         }
 
         .receipt-divider {
-            border-top: 1px dashed #333;
-            margin: 8px 0;
+            border-top: 2px dashed #333;
+            margin: 10px 0;
         }
 
         .receipt-items-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 10px;
-            font-size: 0.95em;
+            margin-bottom: 12px;
+            font-size: 1.05em;
         }
 
         .receipt-items-table th,
         .receipt-items-table td {
             text-align: left;
-            padding: 4px 2px;
+            padding: 5px 2px;
             border-bottom: 1px dotted #888;
         }
 
@@ -139,80 +153,43 @@ function ReceiptModal({ show, onClose, order, orderId, shopName }) {
         .receipt-summary-line {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 5px;
-            font-size: 0.95em;
+            margin-bottom: 6px;
+            font-size: 1.05em;
         }
 
         .receipt-summary-line.total {
             font-weight: bold;
-            font-size: 1.15em;
-            margin-top: 8px;
-            padding-top: 8px;
+            font-size: 1.3em;
+            margin-top: 10px;
+            padding-top: 10px;
             border-top: 2px solid #333;
         }
 
         .receipt-qr-code {
             text-align: center;
-            margin: 12px 0;
+            margin: 15px 0;
         }
 
         .receipt-qr-code p {
-            font-size: 0.85em;
-            margin-bottom: 8px;
+            font-size: 0.95em;
+            margin-bottom: 10px;
             font-family: var(--font-family);
         }
 
         .receipt-qr-code img {
-            width: 100px;
-            height: 100px;
+            width: 120px;
+            height: 120px;
             border: 1px solid #ccc;
         }
 
         .receipt-footer {
             text-align: center;
-            font-size: 0.9em;
-            margin-top: 10px;
+            font-size: 1em;
+            margin-top: 12px;
             font-weight: 500;
         }
 
-        .button-container {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            margin-top: 20px;
-            padding: 0 15px;
-        }
-
-        button {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-family: var(--font-family);
-            font-size: 1em;
-            font-weight: 600;
-            transition: background-color 0.2s ease;
-        }
-
-        .btn-close {
-            background-color: var(--secondary-color);
-            color: var(--text-color);
-        }
-
-        .btn-close:hover {
-            background-color: #C0A070;
-        }
-
-        .btn-print {
-            background-color: var(--primary-color);
-            color: white;
-        }
-
-        .btn-print:hover {
-            background-color: #793D1B;
-        }
-
-        /* Print Styles - Optimized for 80mm Thermal Printer */
+        /* Print Styles */
         @page {
             size: 80mm auto;
             margin: 0;
@@ -226,75 +203,65 @@ function ReceiptModal({ show, onClose, order, orderId, shopName }) {
 
             html, body {
                 width: 80mm;
-                background: white;
-                padding: 0;
+                height: auto;
                 margin: 0;
+                padding: 0;
             }
 
             body {
-                padding: 0 !important;
-            }
-
-            .button-container {
-                display: none !important;
+                padding: 0;
+                display: block;
             }
 
             .receipt-container {
                 width: 80mm;
-                max-width: 80mm;
-                margin: 0;
                 padding: 3mm;
-                box-sizing: border-box;
-                box-shadow: none;
-                border-radius: 0;
             }
 
             .receipt-print-area {
-                width: 100%;
+                font-size: 12pt;
             }
 
-            /* ធ្វើឲ្យទំហំអក្សរធំជាងបន្តិចសម្រាប់ thermal printer */
             .receipt-header h3 {
-                font-size: 1.2em;
+                font-size: 1.4em;
             }
 
             .receipt-header p {
-                font-size: 0.85em;
+                font-size: 0.95em;
             }
 
             .receipt-items-table {
-                font-size: 0.9em;
+                font-size: 1em;
             }
 
             .receipt-items-table th,
             .receipt-items-table td {
-                padding: 3px 2px;
+                padding: 4px 2px;
             }
 
             .receipt-summary-line {
-                font-size: 0.9em;
+                font-size: 1em;
             }
 
             .receipt-summary-line.total {
-                font-size: 1.1em;
+                font-size: 1.25em;
             }
 
             .receipt-qr-code img {
-                width: 90px !important;
-                height: 90px !important;
+                width: 110px !important;
+                height: 110px !important;
             }
 
             .receipt-qr-code p {
-                font-size: 0.8em;
+                font-size: 0.9em;
             }
 
             .receipt-footer {
-                font-size: 0.85em;
+                font-size: 0.95em;
             }
 
             .receipt-logo {
-                width: 55px;
-                height: auto;
+                width: 65px;
             }
         }
     </style>
@@ -351,33 +318,37 @@ function ReceiptModal({ show, onClose, order, orderId, shopName }) {
                 <p>សូមអរគុណ! សូមអញ្ជើញមកម្តងទៀត!</p>
             </div>
         </div>
-        <div class="button-container">
-            <button class="btn-close" onclick="window.close()">បោះបង់</button>
-            <button class="btn-print" onclick="window.print()">បោះពុម្ពវិក្កយបត្រ</button>
-        </div>
     </div>
 </body>
 </html>
-            `);
+        `);
+        frameDoc.close();
 
-            receiptWindow.document.close();
-
-            // ចាំឲ្យ window បិទ រួចហើយ close modal
-            const checkWindowClosed = setInterval(() => {
-                if (receiptWindow.closed) {
-                    clearInterval(checkWindowClosed);
-                    onClose();
+        // ចាំឲ្យ content load រួច រួចហើយ print
+        printFrame.onload = function() {
+            setTimeout(() => {
+                try {
+                    printFrame.contentWindow.focus();
+                    printFrame.contentWindow.print();
+                    
+                    // លុប iframe បន្ទាប់ពី print dialog បើក
+                    setTimeout(() => {
+                        document.body.removeChild(printFrame);
+                    }, 1000);
+                } catch (e) {
+                    console.error('Print error:', e);
+                    document.body.removeChild(printFrame);
                 }
             }, 500);
-        }
+        };
 
-        // បិទ modal ភ្លាមៗ ព្រោះបានបើក window ថ្មីហើយ
+        // បិទ modal ភ្លាមៗ
         onClose();
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [show]);
 
-    // មិនត្រូវការ render អ្វីទេ ព្រោះបើក window ថ្មី
+    // មិនត្រូវការ render អ្វីទេ
     return null;
 }
 
