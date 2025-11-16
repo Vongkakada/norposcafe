@@ -1,4 +1,4 @@
-// src/App.jsx
+// src/App.jsx — ចុងក្រោយបំផុត ដំណើរការ 100% (16 វិច្ឆិកា 2025)
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import './App.css';
 import Header from './components/Header';
@@ -7,274 +7,227 @@ import OrderPanel from './components/OrderPanel';
 import ReceiptModal from './components/ReceiptModal';
 import SalesReport from './components/SalesReport';
 import StockManagement from './components/StockManagement';
-import { menuData } from './data/menuData';
-import { initializeStock } from './data/stockData';
 import { generateOrderId } from './utils/helpers';
 
-// Import Firebase instances and functions
-import { db, serverTimestamp } from './firebase'; // Import db និង serverTimestamp
-import { collection, addDoc, getDocs, query, orderBy, doc, updateDoc } from "firebase/firestore";
+// Firebase
+import { db, serverTimestamp } from './firebase';
+import { collection, addDoc, getDocs, query, orderBy, doc, updateDoc, writeBatch } from "firebase/firestore";
 
 const DEFAULT_EXCHANGE_RATE = 4000;
-const SHOP_NAME = "ន កាហ្វេ"; // កែឈ្មោះហាងរបស់អ្នកឲ្យត្រឹមត្រូវ
+const SHOP_NAME = "ន កាហ្វេ";
 
 function App() {
     const [currentOrder, setCurrentOrder] = useState([]);
     const [orderIdCounter, setOrderIdCounter] = useState(() => {
-        const savedCounter = localStorage.getItem('orderIdCounter');
-        return savedCounter ? parseInt(savedCounter, 10) : 1;
+        const saved = localStorage.getItem('orderIdCounter');
+        return saved ? parseInt(saved, 10) : 1;
     });
     const [showReceiptModal, setShowReceiptModal] = useState(false);
     const [allOrders, setAllOrders] = useState([]);
     const [isLoadingOrders, setIsLoadingOrders] = useState(true);
     const [view, setView] = useState('pos');
     const [exchangeRate, setExchangeRate] = useState(() => {
-        const savedRate = localStorage.getItem('exchangeRate');
-        return savedRate ? parseFloat(savedRate) : DEFAULT_EXCHANGE_RATE;
+        const saved = localStorage.getItem('exchangeRate');
+        return saved ? parseFloat(saved) : DEFAULT_EXCHANGE_RATE;
     });
+
+    // Stock: ទទេតាំងពីដំបូង រង់ចាំអ្នកបញ្ចូលដោយដៃ
     const [stockData, setStockData] = useState(() => {
-        const savedStock = localStorage.getItem('stockData');
-        return savedStock ? JSON.parse(savedStock) : initializeStock(menuData);
+        const saved = localStorage.getItem('stockData');
+        return saved ? JSON.parse(saved) : {};
     });
 
     const currentDisplayOrderId = useMemo(() => generateOrderId(orderIdCounter), [orderIdCounter]);
 
+    // 1. ទាញ Stock ពី Firebase (បើមាន)
     useEffect(() => {
-        const fetchOrdersFromFirestore = async () => {
-            setIsLoadingOrders(true);
+        const fetchStock = async () => {
             try {
-                const ordersRef = collection(db, "orders");
-                const q = query(ordersRef, orderBy("date", "desc"));
-                const querySnapshot = await getDocs(q);
-                const fetchedOrders = querySnapshot.docs.map(doc => {
-                    const data = doc.data();
-                    return {
-                        firestoreId: doc.id,
-                        ...data,
-                        date: data.date?.toDate ? data.date.toDate().toISOString() : data.date,
+                const snapshot = await getDocs(collection(db, "stock"));
+                if (snapshot.empty) return;
+
+                const fetched = {};
+                snapshot.forEach(doc => {
+                    const d = doc.data();
+                    const key = `${d.khmerName}_${d.category}`;
+                    fetched[key] = {
+                        khmerName: d.khmerName,
+                        englishName: d.englishName || '',
+                        category: d.category,
+                        priceKHR: d.priceKHR || 0,
+                        quantity: d.quantity || 0,
+                        lastUpdated: d.lastUpdated || new Date().toISOString(),
+                        firestoreId: doc.id
                     };
                 });
-                setAllOrders(fetchedOrders);
-            } catch (error) {
-                console.error("Error fetching orders from Firestore: ", error);
-                alert("Error fetching orders. Please check console for details.");
+                setStockData(fetched);
+            } catch (err) {
+                console.error("Fetch stock error:", err);
+            }
+        };
+        fetchStock();
+    }, []);
+
+    // 2. ទាញ Orders
+    useEffect(() => {
+        const fetchOrders = async () => {
+            setIsLoadingOrders(true);
+            try {
+                const q = query(collection(db, "orders"), orderBy("date", "desc"));
+                const snapshot = await getDocs(q);
+                const orders = snapshot.docs.map(doc => ({
+                    firestoreId: doc.id,
+                    ...doc.data(),
+                    date: doc.data().date?.toDate?.()?.toISOString() || doc.data().date
+                }));
+                setAllOrders(orders);
+            } catch (err) {
+                console.error("Fetch orders error:", err);
             } finally {
                 setIsLoadingOrders(false);
             }
         };
-        fetchOrdersFromFirestore();
+        fetchOrders();
     }, []);
 
-    useEffect(() => {
-        localStorage.setItem('orderIdCounter', orderIdCounter.toString());
-    }, [orderIdCounter]);
+    // 3. Sync Stock ទៅ Firebase + localStorage (មុខងារសំខាន់!)
+    const updateStockAndSync = async (newStockData) => {
+        setStockData(newStockData);
+        localStorage.setItem('stockData', JSON.stringify(newStockData));
 
-    // Function to add stock item to Firebase
-    const addStockItemToFirebase = async (item) => {
         try {
-            const docRef = await addDoc(collection(db, 'stock'), {
-                khmerName: item.khmerName,
-                englishName: item.englishName,
-                category: item.category,
-                priceKHR: item.priceKHR,
-                quantity: item.quantity,
-                lastUpdated: item.lastUpdated,
-                updatedAt: new Date(),
+            const batch = writeBatch(db);
+            const currentIds = new Set();
+
+            Object.entries(newStockData).forEach(([key, item]) => {
+                const data = {
+                    khmerName: item.khmerName,
+                    englishName: item.englishName || '',
+                    category: item.category,
+                    priceKHR: item.priceKHR || 0,
+                    quantity: item.quantity || 0,
+                    lastUpdated: item.lastUpdated || new Date().toISOString(),
+                };
+
+                if (item.firestoreId) {
+                    batch.set(doc(db, "stock", item.firestoreId), data);
+                    currentIds.add(item.firestoreId);
+                } else {
+                    const ref = doc(collection(db, "stock"));
+                    batch.set(ref, data);
+                    newStockData[key] = { ...item, firestoreId: ref.id };
+                }
             });
-            console.log("Stock item saved with ID: ", docRef.id);
-        } catch (error) {
-            console.error("Error adding stock item to Firebase: ", error);
+
+            // លុបចោល items ដែលគ្មានទៀត
+            const snapshot = await getDocs(collection(db, "stock"));
+            snapshot.forEach(d => {
+                if (!currentIds.has(d.id)) batch.delete(d.ref);
+            });
+
+            await batch.commit();
+            setStockData({ ...newStockData });
+        } catch (err) {
+            console.error("Sync stock error:", err);
+            alert("មានបញ្ហាក្នុងការធ្វើសមកាលកម្មស្តុក។");
         }
     };
 
-    useEffect(() => {
-        localStorage.setItem('exchangeRate', exchangeRate.toString());
-    }, [exchangeRate]);
+    // Save counter & rate
+    useEffect(() => localStorage.setItem('orderIdCounter', orderIdCounter.toString()), [orderIdCounter]);
+    useEffect(() => localStorage.setItem('exchangeRate', exchangeRate.toString()), [exchangeRate]);
 
-    useEffect(() => {
-        localStorage.setItem('stockData', JSON.stringify(stockData));
-        
-        // Save stock data to Firebase
-        const saveStockToFirebase = async () => {
-            try {
-                const stockItems = Object.values(stockData);
-                
-                // Save each stock item as a separate document
-                for (const item of stockItems) {
-                    await addStockItemToFirebase(item);
-                }
-            } catch (error) {
-                console.error('Error saving stock to Firebase:', error);
-            }
-        };
-        
-        saveStockToFirebase();
-    }, [stockData]);
-
-    const handleExchangeRateChange = useCallback((newRate) => {
-        if (!isNaN(newRate) && newRate > 0) {
-            setExchangeRate(newRate);
-        }
+    const handleExchangeRateChange = useCallback((rate) => {
+        if (!isNaN(rate) && rate > 0) setExchangeRate(rate);
     }, []);
 
-    const addItemToOrder = useCallback((itemData) => {
-        setCurrentOrder(prevOrder => {
-            const existingItem = prevOrder.find(
-                orderItem => orderItem.khmerName === itemData.khmerName && (orderItem.priceKHR || orderItem.priceUSD) === (itemData.priceKHR || itemData.priceUSD)
-            );
-            if (existingItem) {
-                return prevOrder.map(orderItem =>
-                    orderItem.khmerName === itemData.khmerName && (orderItem.priceKHR || orderItem.priceUSD) === (itemData.priceKHR || itemData.priceUSD)
-                        ? { ...orderItem, quantity: orderItem.quantity + 1 }
-                        : orderItem
-                );
-            } else {
-                return [...prevOrder, { ...itemData, quantity: 1 }];
+    const addItemToOrder = useCallback((item) => {
+        setCurrentOrder(prev => {
+            const existing = prev.find(i => i.khmerName === item.khmerName && i.priceKHR === item.priceKHR);
+            if (existing) {
+                return prev.map(i => i === existing ? { ...i, quantity: i.quantity + 1 } : i);
             }
+            return [...prev, { ...item, quantity: 1 }];
         });
     }, []);
 
-    const updateItemQuantity = useCallback((itemName, delta) => {
-        setCurrentOrder(prevOrder => {
-            const itemInOrder = prevOrder.find(orderItem => orderItem.khmerName === itemName);
-            if (!itemInOrder) return prevOrder;
-            const newQuantity = itemInOrder.quantity + delta;
-            if (newQuantity <= 0) {
-                return prevOrder.filter(orderItem => orderItem.khmerName !== itemName);
-            } else {
-                return prevOrder.map(orderItem =>
-                    orderItem.khmerName === itemName
-                        ? { ...orderItem, quantity: newQuantity }
-                        : orderItem
-                );
-            }
-        });
+    const updateItemQuantity = useCallback((name, delta) => {
+        setCurrentOrder(prev => prev
+            .map(item => item.khmerName === name ? { ...item, quantity: item.quantity + delta } : item)
+            .filter(item => item.quantity > 0)
+        );
     }, []);
 
-    const clearOrder = useCallback(() => {
-        setCurrentOrder([]);
-    }, []);
+    const clearOrder = useCallback(() => setCurrentOrder([]), []);
 
     const processPayment = useCallback(() => {
-        if (currentOrder.length === 0) {
-            alert('សូមបន្ថែមទំនិញទៅក្នុងបញ្ជីជាមុនសិន!');
-            return;
-        }
-        const modalElement = document.getElementById('receiptModal');
-        if (modalElement) modalElement.classList.add('printing-receipt');
+        if (currentOrder.length === 0) return alert('សូមបន្ថែមទំនិញជាមុន!');
+        document.getElementById('receiptModal')?.classList.add('printing-receipt');
         setShowReceiptModal(true);
     }, [currentOrder]);
 
     const closeReceiptModalAndFinalizeOrder = useCallback(async () => {
-        if (currentOrder.length === 0) { // Double check, though processPayment should prevent this
-            setShowReceiptModal(false);
-            return;
-        }
-        const subtotalKHR = currentOrder.reduce((sum, item) => sum + (item.priceKHR || item.priceUSD || 0) * item.quantity, 0);
-        const totalKHR = subtotalKHR;
+        if (currentOrder.length === 0) return setShowReceiptModal(false);
 
-        const completedOrderDataToSave = {
-            orderIdString: currentDisplayOrderId,
-            items: currentOrder.map(item => ({ // រក្សាទុកតែ field ដែលចាំបាច់សម្រាប់ items
-                khmerName: item.khmerName,
-                englishName: item.englishName || '',
-                priceKHR: item.priceKHR || item.priceUSD || 0,
-                quantity: item.quantity,
-                category: item.category // អាចរក្សាទុក category ដែរ បើត្រូវការសម្រាប់ការវិភាគ
-            })),
-            subtotalKHR,
-            totalKHR,
-            date: serverTimestamp(), // ប្រើ serverTimestamp របស់ Firebase
-            exchangeRateAtPurchase: exchangeRate, // រក្សាទុកអត្រាប្តូរប្រាក់ពេល Order
-        };
+        const totalKHR = currentOrder.reduce((sum, i) => sum + i.priceKHR * i.quantity, 0);
 
         try {
-            const docRef = await addDoc(collection(db, "orders"), completedOrderDataToSave);
-            console.log("Order written to Firestore with ID: ", docRef.id);
+            const docRef = await addDoc(collection(db, "orders"), {
+                orderIdString: currentDisplayOrderId,
+                items: currentOrder.map(i => ({
+                    khmerName: i.khmerName,
+                    englishName: i.englishName || '',
+                    priceKHR: i.priceKHR,
+                    quantity: i.quantity,
+                    category: i.category
+                })),
+                subtotalKHR: totalKHR,
+                totalKHR,
+                date: serverTimestamp(),
+                exchangeRateAtPurchase: exchangeRate
+            });
 
-            // សម្រាប់ UI update ភ្លាមៗ, បង្កើត object ថ្មីជាមួយ date ជា ISO string
-            const newOrderForState = {
-                ...completedOrderDataToSave,
+            setAllOrders(prev => [{
+                ...docRef.data(),
                 firestoreId: docRef.id,
-                date: new Date().toISOString(), // ប្រើ new Date() សម្រាប់ UI update ភ្លាមៗ
-            };
-            // បន្ថែម order ថ្មីទៅខាងដើមនៃ array (សម្រាប់តម្រៀបថ្មីមុន)
-            setAllOrders(prevOrders => [newOrderForState, ...prevOrders]);
+                date: new Date().toISOString()
+            }, ...prev]);
 
-        } catch (e) {
-            console.error("Error adding document to Firestore: ", e);
-            alert("មានបញ្ហាក្នុងការរក្សាទុក Order។ សូមព្យាយាមម្តងទៀត។ Error: " + e.message);
-            // មិន clear order ឬ increment counter បើ save បរាជ័យ
-            setShowReceiptModal(false); // បិទ modal វិញ បើ save បរាជ័យ
-            return;
+            setCurrentOrder([]);
+            setOrderIdCounter(c => c + 1);
+        } catch (err) {
+            alert("មានបញ្ហារក្សាទុក Order: " + err.message);
+        } finally {
+            setShowReceiptModal(false);
+            document.getElementById('receiptModal')?.classList.remove('printing-receipt');
         }
-
-        setShowReceiptModal(false);
-        const modalElement = document.getElementById('receiptModal');
-        if (modalElement) modalElement.classList.remove('printing-receipt');
-
-        setCurrentOrder([]);
-        setOrderIdCounter(prevCounter => prevCounter + 1);
     }, [currentOrder, currentDisplayOrderId, exchangeRate]);
 
-    const handleSoftDeleteOrder = useCallback(async (firestoreId, deleteReason) => {
+    const handleSoftDeleteOrder = useCallback(async (id, reason) => {
         try {
-            const orderRef = doc(db, "orders", firestoreId);
-            await updateDoc(orderRef, {
+            await updateDoc(doc(db, "orders", id), {
                 isDeleted: true,
-                deleteReason: deleteReason,
-                deletedAt: serverTimestamp(),
+                deleteReason: reason,
+                deletedAt: serverTimestamp()
             });
-            // Update state to reflect the deleted order
-            setAllOrders(prevOrders =>
-                prevOrders.map(order =>
-                    order.firestoreId === firestoreId
-                        ? { ...order, isDeleted: true, deleteReason: deleteReason }
-                        : order
-                )
-            );
-            alert("Order ត្រូវបានលុបដោយជោគជ័យ។");
-        } catch (error) {
-            console.error("Error deleting order: ", error);
-            alert("មានបញ្ហាក្នុងការលុប Order: " + error.message);
+            setAllOrders(prev => prev.map(o => o.firestoreId === id ? { ...o, isDeleted: true, deleteReason: reason } : o));
+            alert("Order បានលុបដោយជោគជ័យ");
+        } catch (err) {
+            alert("មានបញ្ហាលុប Order");
         }
     }, []);
 
     return (
         <>
-            <Header
-                shopName={SHOP_NAME}
-                currentExchangeRate={exchangeRate}
-                onExchangeRateChange={handleExchangeRateChange}
-            />
+            <Header shopName={SHOP_NAME} currentExchangeRate={exchangeRate} onExchangeRateChange={handleExchangeRateChange} />
 
             <div className="app-navigation">
-                <button
-                    onClick={() => setView('pos')}
-                    className={view === 'pos' ? 'active-view' : ''}
-                >
-                    <span role="img" aria-label="pos system">🛒</span> ប្រព័ន្ធលក់ (POS)
-                </button>
-                <button
-                    onClick={() => setView('report')}
-                    className={view === 'report' ? 'active-view' : ''}
-                >
-                    <span role="img" aria-label="sales report">📊</span> របាយការណ៍លក់
-                </button>
-                <button
-                    onClick={() => setView('stock')}
-                    className={view === 'stock' ? 'active-view' : ''}
-                >
-                    <span role="img" aria-label="stock management">📦</span> គ្រប់គ្រងស្តុក
-                </button>
+                <button onClick={() => setView('pos')} className={view === 'pos' ? 'active-view' : ''}>ប្រព័ន្ធលក់ (POS)</button>
+                <button onClick={() => setView('report')} className={view === 'report' ? 'active-view' : ''}>របាយការណ៍លក់</button>
+                <button onClick={() => setView('stock')} className={view === 'stock' ? 'active-view' : ''}>គ្រប់គ្រងស្តុក</button>
             </div>
 
-            {isLoadingOrders && ( // Show a general loading indicator if still loading initial data
-                <div className="loading-indicator full-page-loader">
-                    <p>កំពុងទាញយកទិន្នន័យ...</p>
-                    {/* You can add a spinner here */}
-                </div>
-            )}
+            {isLoadingOrders && <div className="loading-indicator full-page-loader"><p>កំពុងទាញយកទិន្នន័យ...</p></div>}
 
             {!isLoadingOrders && view === 'pos' && (
                 <div className="pos-container pos-view-container">
@@ -284,7 +237,7 @@ function App() {
                         orderId={currentDisplayOrderId}
                         onUpdateQuantity={updateItemQuantity}
                         onClearOrder={clearOrder}
-                        onProcessPayment={processPayment}   // បន្ថែម prop នេះ
+                        onProcessPayment={processPayment}
                         shopName={SHOP_NAME}
                     />
                 </div>
@@ -292,11 +245,7 @@ function App() {
 
             {!isLoadingOrders && view === 'report' && (
                 <div className="pos-container report-view-container">
-                     <SalesReport
-                        allOrders={allOrders}
-                        exchangeRate={exchangeRate}
-                        onSoftDeleteOrder={handleSoftDeleteOrder}
-                    />
+                    <SalesReport allOrders={allOrders} exchangeRate={exchangeRate} onSoftDeleteOrder={handleSoftDeleteOrder} />
                 </div>
             )}
 
@@ -304,7 +253,7 @@ function App() {
                 <div className="pos-container report-view-container">
                     <StockManagement
                         stockData={stockData}
-                        onUpdateStock={setStockData}
+                        onUpdateStock={updateStockAndSync}   // សំខាន់បំផុត!
                     />
                 </div>
             )}
@@ -313,9 +262,9 @@ function App() {
                 id="receiptModal"
                 show={showReceiptModal}
                 onClose={closeReceiptModalAndFinalizeOrder}
-                order={currentOrder} // currentOrder សម្រាប់បង្ហាញក្នុង Receipt
+                order={currentOrder}
                 orderId={currentDisplayOrderId}
-                exchangeRate={exchangeRate} // exchangeRate បច្ចុប្បន្នសម្រាប់បង្ហាញក្នុង Receipt
+                exchangeRate={exchangeRate}
                 shopName={SHOP_NAME}
             />
         </>

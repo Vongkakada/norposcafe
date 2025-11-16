@@ -1,8 +1,7 @@
 // src/components/OrderPanel.jsx
-import React, { useState } from 'react';
+import React from 'react';
 import OrderItemEntry from './OrderItemEntry';
 import { KHR_SYMBOL, formatKHR } from '../utils/formatters';
-
 function OrderPanel({
   currentOrder,
   orderId,
@@ -64,7 +63,7 @@ function OrderPanel({
           onClick={onProcessPayment} // ប្រើ function ពី App.jsx (ដែលមាន save + print)
           disabled={currentOrder.length === 0}
         >
-          គិតលុយ + Print
+          គិតលុយ
         </button>
       </div>
     </div>

@@ -162,7 +162,7 @@ function ReceiptModal({ show, onClose, order, orderId, shopName }) {
 
         receiptWindow.document.close();
         setTimeout(() => {
-                            onClose(); // បិទ modal ដោយស្វ័យប្រវត្តិបន្ទាប់ពី Print
+        onClose(); // បិទ modal ដោយស្វ័យប្រវត្តិបន្ទាប់ពី Print
                         }, 1500);
 
     }, [show, order, orderId, shopName, onClose]);
