@@ -1,5 +1,5 @@
 // src/components/ReceiptModal.jsx
-import React, { useRef, useEffect } from 'react';
+import { useEffect } from 'react';
 import { KHR_SYMBOL, formatKHR } from '../utils/formatters';
 import qrcode from '../assets/qrcode.jpg';
 import logo from '../assets/logo.png';
@@ -9,8 +9,7 @@ const SHOP_STATIC_DETAILS = {
     tel: "016 438 555 / 061 91 4444"
 };
 
-function ReceiptModal({ show, onClose, order, orderId, exchangeRate, shopName }) {
-    const receiptRef = useRef(null);
+function ReceiptModal({ show, onClose, order, orderId, shopName }) {
 
     useEffect(() => {
         if (!show) return;
@@ -323,7 +322,8 @@ function ReceiptModal({ show, onClose, order, orderId, exchangeRate, shopName })
         // បិទ modal ភ្លាមៗ ព្រោះបានបើក window ថ្មីហើយ
         onClose();
 
-    }, [show, order, orderId, shopName, onClose]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [show]);
 
     // មិនត្រូវការ render អ្វីទេ ព្រោះបើក window ថ្មី
     return null;
