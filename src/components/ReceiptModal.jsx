@@ -225,7 +225,7 @@ function ReceiptModal({ show, onClose, order, orderId, shopName }) {
             }
 
             html, body {
-                width: 80mm;
+                width: 100%;
                 background: white;
                 padding: 0;
                 margin: 0;
