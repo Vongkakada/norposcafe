@@ -13,24 +13,20 @@ function ReceiptModal({ show, onClose, order, orderId, shopName }) {
     useEffect(() => {
         if (!show) return;
 
-        // បើក Tab ថ្មីតូចខ្លី (400x600px) ដើម្បីមើល Preview ស្អាត
         const receiptWindow = window.open(
             '',
             '_blank',
-            'width=420,height=700,scrollbars=no,resizable=yes'
+            'width=420,height=720,scrollbars=no,resizable=no'
         );
 
         if (!receiptWindow) {
-            alert('សូមអនុញ្ញាត Pop-up ដើម្បីបោះពុម្ពវិក្កយបត្រ');
+            alert('សូមអនុញ្ញាត Pop-up');
             onClose();
             return;
         }
 
         const now = new Date();
-        const subtotalKHR = order.reduce(
-            (sum, item) => sum + (item.priceKHR || item.priceUSD || 0) * item.quantity,
-            0
-        );
+        const subtotalKHR = order.reduce((sum, item) => sum + (item.priceKHR || item.priceUSD || 0) * item.quantity, 0);
         const totalKHR = subtotalKHR;
 
         const safeShopNameForQR = shopName.replace(/\s+/g, '_');
@@ -45,82 +41,88 @@ function ReceiptModal({ show, onClose, order, orderId, shopName }) {
     <meta name="viewport" content="width=80mm, initial-scale=1.0">
     <title>វិក្កយបត្រ #${orderId}</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * { margin:0; padding:0; box-sizing:border-box; }
         body {
             font-family: 'Kantumruy Pro', sans-serif;
-            background: #f9f9f9;
-            padding: 8px;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            min-height: 100vh;
+            background:#f8f8f8;
+            padding:10px;
+            display:flex;
+            justify-content:center;
         }
         .receipt {
-            width: 80mm;
-            background: white;
-            padding: 12px 8px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            font-size: 10pt;
-            line-height: 1.45;
+            width:80mm;
+            background:white;
+            padding:10px 6px;
+            border-radius:8px;
+            box-shadow:0 4px 15px rgba(0,0,0,0.2);
+            font-size:9.5pt;
+            line-height:1.4;
         }
-        .logo { text-align: center; margin-bottom: 10px; }
-        .logo img { width: 50px; height: auto; }
-        .header { text-align: center; margin-bottom: 10px; }
-        .header h3 { font-size: 14pt; margin: 6px 0 4px; font-weight: bold; }
-        .header p { font-size: 9pt; margin: 3px 0; color: #444; }
-        .divider { border-top: 1px dashed #000; margin: 8px 0; }
-        table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 9.5pt; }
-        th { background: #f0f0f0; padding: 5px 3px; font-weight: bold; font-size: 9pt; }
-        td { padding: 4px 3px; border-bottom: 1px dotted #aaa; }
-        td:nth-child(2) { text-align: center; }
-        td:last-child { text-align: right; }
-        .summary { margin: 8px 0; font-size: 10.5pt; }
+        .logo img { width:45px; height:auto; display:block; margin:0 auto 8px; }
+        .header { text-align:center; margin-bottom:8px; }
+        .header h3 { font-size:13pt; margin:5px 0; font-weight:bold; }
+        .header p { font-size:8.5pt; margin:2px 0; color:#444; }
+        .divider { border-top:1px dashed #000; margin:6px 0; }
+        table { width:100%; border-collapse:collapse; margin:6px 0; font-size:9pt; }
+        th { background:#eee; padding:4px 2px; font-weight:bold; font-size:8.5pt; }
+        td { padding:3px 2px; border-bottom:1px dotted #999; }
+        td:nth-child(2) { text-align:center; }
+        td:last-child { text-align:right; }
+        .summary { margin:8px 0; font-size:10pt; }
         .total {
-            font-size: 13pt !important;
-            font-weight: bold;
-            border-top: 2px solid #000;
-            padding-top: 6px;
-            margin-top: 8px;
+            font-size:12.5pt !important;
+            font-weight:bold;
+            border-top:2px solid #000;
+            padding-top:6px;
+            margin-top:8px;
         }
-        .qr { text-align: center; margin: 12px 0; }
-        .qr img { width: 55mm; height: 55mm; padding: 4px; border: 1px solid #000; background: white; }
-        .footer { text-align: center; margin-top: 12px; font-weight: bold; font-size: 10pt; }
+        .qr { text-align:center; margin:10px 0; }
+        .qr img { width:50mm; height:50mm; padding:3px; border:1px solid #000; background:white; }
+        .footer { text-align:center; margin-top:10px; font-weight:bold; font-size:9.5pt; }
 
-        /* Print ចេញមកត្រឹមត្រូវ 80mm */
+        /* សំខាន់បំផុត: បង្ខំឲ្យ Print ចេញតែ 1 Page គត់ */
         @media print {
-            @page { size: 80mm auto; margin: 0; }
-            body { background: white; padding: 0; margin: 0; }
+            @page {
+                size: 80mm auto;   /* ក្រដាស 80mm */
+                margin: 0;
+            }
+            html, body {
+                height: auto !important;
+                overflow: visible !important;
+            }
             .receipt {
-                width: 80mm;
+                page-break-after: avoid;
+                page-break-before: avoid;
+                page-break-inside: avoid;
+                height: auto;
+                min-height: auto;
+                padding: 8px 5px;
                 border: none;
                 box-shadow: none;
-                padding: 10px 6px;
             }
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
+            /* បង្ខំឲ្យ table មិន break ទំព័រ */
+            table, tr, td, th { page-break-inside: avoid; }
+            /* បើ order វែងខ្លាំង → បង្រួញអក្សរបន្តិចដើម្បី fit 1 page */
+            .receipt { font-size: 8.5pt !important; line-height: 1.3 !important; }
+            table { font-size: 8pt !important; }
+            .total { font-size: 11pt !important; }
         }
     </style>
 </head>
 <body onload="setTimeout(() => window.print(), 600)">
     <div class="receipt">
-        <div class="logo">
-            <img src="${logo}" onerror="this.style.display='none'">
-        </div>
+        <div class="logo"><img src="${logo}" onerror="this.style.display='none'"></div>
         <div class="header">
             <h3>${shopName}</h3>
             <p>${SHOP_STATIC_DETAILS.address}</p>
             <p>ទូរស័ព្ទ: ${SHOP_STATIC_DETAILS.tel}</p>
-            <p>កាលបរិច្ឆេទ: ${now.toLocaleDateString('km-KH')} ${now.toLocaleTimeString('km-KH', {hour: '2-digit', minute: '2-digit'})}</p>
-            <p>លេខវិក្កយបត្រ: ${orderId}</p>
+            <p>${now.toLocaleDateString('km-KH')} ${now.toLocaleTimeString('km-KH', {hour:'2-digit',minute:'2-digit'})}</p>
+            <p>វិក្កយបត្រ: ${orderId}</p>
         </div>
         <div class="divider"></div>
 
         <table>
-            <thead>
-                <tr><th>មុខទំនិញ</th><th>ចំនួន</th><th>តម្លៃ</th></tr>
-            </thead>
+            <thead><tr><th>មុខទំនិញ</th><th>ចំ.</th><th>តម្លៃ</th></tr></thead>
             <tbody>
                 ${order.map(item => `
                     <tr>
@@ -144,21 +146,14 @@ function ReceiptModal({ show, onClose, order, orderId, shopName }) {
             </div>
         </div>
 
-        <div class="qr">
-            <img src="${qrCodeUrl}" onerror="this.style.display='none'">
-        </div>
-
-        <div class="footer">
-            សូមអរគុណច្រើន! សូមអញ្ជើញមកម្តងទៀត!
-        </div>
+        <div class="qr"><img src="${qrCodeUrl}" onerror="this.style.display='none'"></div>
+        <div class="footer">សូមអរគុណ! សូមអញ្ជើញមកម្តងទៀត!</div>
     </div>
 </body>
 </html>
         `);
 
         receiptWindow.document.close();
-
-        // បិទ modal ដើម
         setTimeout(() => onClose(), 1000);
 
     }, [show, order, orderId, shopName, onClose]);
