@@ -1,4 +1,4 @@
-// ReceiptModal.jsx
+// ReceiptModal80mm.jsx
 import React, { useState, useEffect } from "react";
 import { KHR_SYMBOL, formatKHR } from "../utils/formatters";
 import qrcode from "../assets/qrcode.jpg";
@@ -18,28 +18,26 @@ function ReceiptModal({ show, onClose, order, orderId, shopName }) {
     const generateReceiptImage = async () => {
       const canvas = document.createElement("canvas");
       const ctx = canvas.getContext("2d");
-      const width = 384; // 58mm ~ 384px
-      const padding = 12;
-      const lineHeight = 20;
+      const width = 576; // 80mm thermal printer
+      const padding = 16;
+      const lineHeight = 24;
       let y = padding;
 
       const height =
-        70 + // logo
+        90 + // logo
         lineHeight * 6 +
         order.length * lineHeight * 2.5 +
         lineHeight * 3 +
-        100 +
+        120 +
         lineHeight * 2 +
         padding * 3;
       canvas.width = width;
       canvas.height = height;
 
-      // white background
       ctx.fillStyle = "#fff";
       ctx.fillRect(0, 0, width, height);
       ctx.fillStyle = "#000";
 
-      // load image helper
       const loadImage = (src) =>
         new Promise((resolve, reject) => {
           const img = new Image();
@@ -49,41 +47,37 @@ function ReceiptModal({ show, onClose, order, orderId, shopName }) {
           img.src = src;
         });
 
-      // logo
       const logoImg = await loadImage(logo);
-      ctx.drawImage(logoImg, (width - 50) / 2, y, 50, 50);
-      y += 50 + 8;
+      ctx.drawImage(logoImg, (width - 70) / 2, y, 70, 70);
+      y += 70 + 12;
 
-      // shop name
-      ctx.font = "bold 16px Arial";
+      ctx.font = "bold 18px Arial";
       ctx.textAlign = "center";
       ctx.fillText(shopName, width / 2, y);
       y += lineHeight;
 
-      ctx.font = "12px Arial";
+      ctx.font = "14px Arial";
       ctx.fillText(SHOP_STATIC_DETAILS.address, width / 2, y);
       y += lineHeight;
       ctx.fillText(`Tel: ${SHOP_STATIC_DETAILS.tel}`, width / 2, y);
       y += lineHeight;
 
       const now = new Date();
-      ctx.font = "11px Arial";
+      ctx.font = "12px Arial";
       ctx.fillText(`${now.toLocaleDateString()} ${now.toLocaleTimeString()}`, width / 2, y);
       y += lineHeight;
       ctx.fillText(`Invoice: ${orderId}`, width / 2, y);
-      y += lineHeight + 4;
+      y += lineHeight + 6;
 
-      // line
       ctx.beginPath();
       ctx.moveTo(padding, y);
       ctx.lineTo(width - padding, y);
       ctx.lineWidth = 1;
       ctx.stroke();
-      y += 8;
+      y += 10;
 
-      // items
       ctx.textAlign = "left";
-      ctx.font = "12px Arial";
+      ctx.font = "14px Arial";
       order.forEach((item) => {
         ctx.fillText(`${item.khmerName}`, padding, y);
         y += lineHeight;
@@ -95,34 +89,29 @@ function ReceiptModal({ show, onClose, order, orderId, shopName }) {
         y += lineHeight + 2;
       });
 
-      y += 4;
-      // line
+      y += 6;
       ctx.beginPath();
       ctx.moveTo(padding, y);
       ctx.lineTo(width - padding, y);
       ctx.stroke();
       y += lineHeight;
 
-      // total
       const subtotalKHR = order.reduce(
         (sum, item) => sum + (item.priceKHR || item.priceUSD || 0) * item.quantity,
         0
       );
-      ctx.font = "bold 14px Arial";
+      ctx.font = "bold 16px Arial";
       ctx.textAlign = "center";
       ctx.fillText(`Total: ${KHR_SYMBOL}${formatKHR(subtotalKHR)}`, width / 2, y);
-      y += lineHeight + 4;
+      y += lineHeight + 6;
 
-      // QR code
       const qrImg = await loadImage(qrcode);
-      ctx.drawImage(qrImg, (width - 90) / 2, y, 90, 90);
-      y += 90 + 10;
+      ctx.drawImage(qrImg, (width - 100) / 2, y, 100, 100);
+      y += 100 + 12;
 
-      // thank you
-      ctx.font = "12px Arial";
+      ctx.font = "14px Arial";
       ctx.fillText("សូមអរគុណ! សូមអញ្ជើញមកម្តងទៀត!", width / 2, y);
 
-      // convert to base64
       const base64 = canvas.toDataURL("image/png");
       setImageUrl(base64);
     };
@@ -132,8 +121,20 @@ function ReceiptModal({ show, onClose, order, orderId, shopName }) {
 
   const handlePrintRawBT = () => {
     if (!imageUrl) return;
-    // Send direct to RawBT
-    window.location.href = `rawbt:image,${imageUrl.split(",")[1]}`;
+
+    // 1. create temporary download link
+    const link = document.createElement("a");
+    link.href = imageUrl;
+    link.download = `receipt_${orderId}.png`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    // 2. open RawBT (Android) for printing
+    // rawbt will detect last downloaded image
+    setTimeout(() => {
+      window.location.href = "rawbt:"; 
+    }, 500);
   };
 
   if (!show) return null;
@@ -143,12 +144,8 @@ function ReceiptModal({ show, onClose, order, orderId, shopName }) {
       <div className="modal-content">
         <span className="close-button" onClick={onClose}>×</span>
 
-        <h3>Receipt Preview (Image)</h3>
-        {imageUrl ? (
-          <img src={imageUrl} alt="Receipt" style={{ width: "100%" }} />
-        ) : (
-          <p>កំពុងបង្កើត receipt...</p>
-        )}
+        <h3>Receipt Preview (80mm)</h3>
+        {imageUrl ? <img src={imageUrl} alt="Receipt" style={{ width: "100%" }} /> : <p>កំពុងបង្កើត receipt...</p>}
 
         <div style={{ marginTop: 12, display: "flex", gap: 10 }}>
           <button onClick={onClose}>បោះបង់</button>
