@@ -41,13 +41,11 @@ function ReceiptModal({ show, onClose, order, orderId, shopName }) {
 <style>
     body {
         margin: 0;
-        padding: 10px;
         font-family: 'Kantumruy Pro', sans-serif;
         background: white;
     }
 
     .receipt-container {
-        padding: 10px;
         box-sizing: border-box;
     }
 
