@@ -32,7 +32,7 @@ function ReceiptModal({ show, onClose, order, orderId, shopName }) {
 <html lang="km">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width">
     <title>វិក្កយបត្រ #${orderId}</title>
     <link href="https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@300;400;500;700&display=swap" rel="stylesheet">
     <style>
@@ -64,7 +64,7 @@ function ReceiptModal({ show, onClose, order, orderId, shopName }) {
 
         .receipt-print-area {
             font-family: 'Courier New', Courier, monospace;
-            font-size: 13pt;
+            font-size: 11pt;
             color: #000;
             width: 100%;
         }
@@ -75,46 +75,46 @@ function ReceiptModal({ show, onClose, order, orderId, shopName }) {
         }
 
         .receipt-logo {
-            width: 70px;
+            width: 60px;
             height: auto;
-            max-height: 70px;
+            max-height: 60px;
         }
 
         .receipt-header {
             text-align: center;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
         }
 
         .receipt-header h3 {
-            margin: 6px 0;
+            margin: 5px 0;
             font-family: var(--font-family);
-            font-size: 1.5em;
+            font-size: 1.3em;
             font-weight: bold;
             color: #000;
         }
 
         .receipt-header p {
-            margin: 3px 0;
-            font-size: 1em;
-            line-height: 1.5;
+            margin: 2px 0;
+            font-size: 0.9em;
+            line-height: 1.4;
         }
 
         .receipt-divider {
-            border-top: 2px dashed #333;
-            margin: 10px 0;
+            border-top: 1px dashed #333;
+            margin: 8px 0;
         }
 
         .receipt-items-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 12px;
-            font-size: 1.05em;
+            margin-bottom: 10px;
+            font-size: 0.95em;
         }
 
         .receipt-items-table th,
         .receipt-items-table td {
             text-align: left;
-            padding: 5px 2px;
+            padding: 4px 2px;
             border-bottom: 1px dotted #888;
         }
 
@@ -139,39 +139,39 @@ function ReceiptModal({ show, onClose, order, orderId, shopName }) {
         .receipt-summary-line {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 6px;
-            font-size: 1.05em;
+            margin-bottom: 5px;
+            font-size: 0.95em;
         }
 
         .receipt-summary-line.total {
             font-weight: bold;
-            font-size: 1.3em;
-            margin-top: 10px;
-            padding-top: 10px;
+            font-size: 1.15em;
+            margin-top: 8px;
+            padding-top: 8px;
             border-top: 2px solid #333;
         }
 
         .receipt-qr-code {
             text-align: center;
-            margin: 15px 0;
+            margin: 12px 0;
         }
 
         .receipt-qr-code p {
-            font-size: 0.95em;
-            margin-bottom: 10px;
+            font-size: 0.85em;
+            margin-bottom: 8px;
             font-family: var(--font-family);
         }
 
         .receipt-qr-code img {
-            width: 120px;
-            height: 120px;
+            width: 100px;
+            height: 100px;
             border: 1px solid #ccc;
         }
 
         .receipt-footer {
             text-align: center;
-            font-size: 1em;
-            margin-top: 12px;
+            font-size: 0.9em;
+            margin-top: 10px;
             font-weight: 500;
         }
 
@@ -254,50 +254,46 @@ function ReceiptModal({ show, onClose, order, orderId, shopName }) {
             }
 
             /* ធ្វើឲ្យទំហំអក្សរធំជាងបន្តិចសម្រាប់ thermal printer */
-            .receipt-print-area {
-                font-size: 12pt;
-            }
-
             .receipt-header h3 {
-                font-size: 1.4em;
+                font-size: 1.2em;
             }
 
             .receipt-header p {
-                font-size: 0.95em;
+                font-size: 0.85em;
             }
 
             .receipt-items-table {
-                font-size: 1em;
+                font-size: 0.9em;
             }
 
             .receipt-items-table th,
             .receipt-items-table td {
-                padding: 4px 2px;
+                padding: 3px 2px;
             }
 
             .receipt-summary-line {
-                font-size: 1em;
-            }
-
-            .receipt-summary-line.total {
-                font-size: 1.25em;
-            }
-
-            .receipt-qr-code img {
-                width: 110px !important;
-                height: 110px !important;
-            }
-
-            .receipt-qr-code p {
                 font-size: 0.9em;
             }
 
+            .receipt-summary-line.total {
+                font-size: 1.1em;
+            }
+
+            .receipt-qr-code img {
+                width: 90px !important;
+                height: 90px !important;
+            }
+
+            .receipt-qr-code p {
+                font-size: 0.8em;
+            }
+
             .receipt-footer {
-                font-size: 0.95em;
+                font-size: 0.85em;
             }
 
             .receipt-logo {
-                width: 65px;
+                width: 55px;
                 height: auto;
             }
         }
