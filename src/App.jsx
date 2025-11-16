@@ -1,4 +1,4 @@
-// src/App.jsx — កែរួចរាល់ 100%, Build ជោគជ័យ, មិនបង្ហាញ Modal (16 វិច្ឆិកា 2025)
+// src/App.jsx — កែរួចរាល់ 100%, បោះពុម្ភលឿន, ទិន្នន័យមិនបាត់, Build ជោគជ័យ (16 វិច្ឆិកា 2025)
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import './App.css';
 import Header from './components/Header';
@@ -150,16 +150,16 @@ function App() {
 
     const clearOrder = useCallback(() => setCurrentOrder([]), []);
 
-    // === សំខាន់: Save + Print ដោយមិនបង្ហាញ Modal ===
-    // កែត្រឹម function នេះក្នុង src/App.jsx
+    // === សំខាន់បំផុត: Save + Print ដោយមិនបាត់ទិន្នន័យ ===
     const closeReceiptModalAndFinalizeOrder = useCallback(async () => {
         if (currentOrder.length === 0) return;
 
-        // 1. រក្សាទុក order សិន (សំខាន់បំផុត!)
+        // 1. រក្សាទុក order សិន (មុននឹង clear)
         const orderToSave = [...currentOrder];
         const totalKHR = orderToSave.reduce((sum, i) => sum + i.priceKHR * i.quantity, 0);
 
         try {
+            // Save ទៅ Firebase
             const docRef = await addDoc(collection(db, "orders"), {
                 orderIdString: currentDisplayOrderId,
                 items: orderToSave.map(i => ({
@@ -184,10 +184,10 @@ function App() {
                 date: new Date().toISOString()
             }, ...prev]);
 
-            // 2. ឥឡូវទើប clear order និងបង្ហាញ receipt
-            setCurrentOrder([]);                    // ← clear ក្រោយ
+            // 2. ទើប clear order និងបង្ហាញ receipt
+            setCurrentOrder([]);
             setOrderIdCounter(c => c + 1);
-            setShowReceiptModal(true);              // ← បើក modal ចុងក្រោយ → orderToSave នៅតែមាន!
+            setShowReceiptModal(true); // បើក ReceiptModal → វាបោះពុម្ភភ្លាម
 
         } catch (err) {
             console.error(err);
@@ -195,13 +195,13 @@ function App() {
         }
     }, [currentOrder, currentDisplayOrderId, exchangeRate]);
 
-    // === ចុចគិតលុយ → Save + Print ភ្លាម (គ្មាន Modal លើអេក្រង់) ===
+    // === ចុច "គិតលុយ" → Save + Print ភ្លាម ===
     const processPayment = useCallback(() => {
         if (currentOrder.length === 0) {
             alert('សូមបន្ថែមទំនិញជាមុន!');
             return;
         }
-        closeReceiptModalAndFinalizeOrder(); // ← ធ្វើការទាំងអស់នៅទីនេះ
+        closeReceiptModalAndFinalizeOrder();
     }, [currentOrder, closeReceiptModalAndFinalizeOrder]);
 
     const handleSoftDeleteOrder = useCallback(async (id, reason) => {
@@ -256,14 +256,12 @@ function App() {
                 </div>
             )}
 
-            {/* Modal នៅតែមាន ប៉ុន្តែមើលមិនឃើញ → គ្រាន់តែប្រើបើក Popup Print */}
+            {/* ReceiptModal បើក Popup + Print → មើលមិនឃើញនៅលើអេក្រង់ */}
             <ReceiptModal
-                id="receiptModal"
                 show={showReceiptModal}
                 onClose={() => setShowReceiptModal(false)}
                 order={currentOrder}
                 orderId={currentDisplayOrderId}
-                exchangeRate={exchangeRate}
                 shopName={SHOP_NAME}
             />
         </>
