@@ -20,68 +20,71 @@ function ReceiptModal({ show, onClose, order, orderId, shopName }) {
   const totalKHR = subtotalKHR;
 
   useEffect(() => {
-    if (!show) return;
+  if (!show) return;
 
-    const now = new Date();
+  const now = new Date();
+  let isMounted = true; // flag to prevent state update after unmount
 
-    const generatePDF = async () => {
-      const pdf = new jsPDF({ orientation: "p", unit: "pt", format: [220, 600] });
+  const generatePDF = async () => {
+    const pdf = new jsPDF({ orientation: "p", unit: "pt", format: [220, 600] });
 
-      // Logo
-      const logoImg = new Image();
-      logoImg.src = logo;
-      await new Promise((res) => { logoImg.onload = res; });
-      pdf.addImage(logoImg, "PNG", 80, 10, 50, 50);
+    // Logo
+    const logoImg = new Image();
+    logoImg.src = logo;
+    await new Promise((res) => { logoImg.onload = res; });
 
-      pdf.setFontSize(12);
-      pdf.text(shopName, 110, 70, { align: "center" });
-      pdf.text(SHOP_STATIC_DETAILS.address, 110, 85, { align: "center" });
-      pdf.text(`Tel: ${SHOP_STATIC_DETAILS.tel}`, 110, 100, { align: "center" });
-      pdf.setFontSize(10);
-      pdf.text(`${now.toLocaleDateString()} ${now.toLocaleTimeString()}`, 110, 115, { align: "center" });
-      pdf.text(`Invoice: ${orderId}`, 110, 130, { align: "center" });
-      pdf.line(10, 140, 210, 140);
+    pdf.addImage(logoImg, "PNG", 80, 10, 50, 50);
 
-      let y = 155;
-      order.forEach((item) => {
-        pdf.setFontSize(11);
-        pdf.text(`${item.khmerName}`, 12, y);
-        pdf.text(`${item.englishName || ""} x${item.quantity}`, 12, y + 12);
-        pdf.text(`${KHR_SYMBOL}${formatKHR((item.priceKHR || item.priceUSD) * item.quantity)}`, 208, y + 12, { align: "right" });
-        y += 28;
-      });
+    pdf.setFontSize(12);
+    pdf.text(shopName, 110, 70, { align: "center" });
+    pdf.text(SHOP_STATIC_DETAILS.address, 110, 85, { align: "center" });
+    pdf.text(`Tel: ${SHOP_STATIC_DETAILS.tel}`, 110, 100, { align: "center" });
+    pdf.setFontSize(10);
+    pdf.text(`${now.toLocaleDateString()} ${now.toLocaleTimeString()}`, 110, 115, { align: "center" });
+    pdf.text(`Invoice: ${orderId}`, 110, 130, { align: "center" });
+    pdf.line(10, 140, 210, 140);
 
-      pdf.line(10, y, 210, y);
-      y += 12;
-      pdf.setFontSize(12);
-      pdf.text(`Total: ${KHR_SYMBOL}${formatKHR(totalKHR)}`, 110, y, { align: "center" });
+    let y = 155;
+    order.forEach((item) => {
+      pdf.setFontSize(11);
+      pdf.text(`${item.khmerName}`, 12, y);
+      pdf.text(`${item.englishName || ""} x${item.quantity}`, 12, y + 12);
+      pdf.text(`${KHR_SYMBOL}${formatKHR((item.priceKHR || item.priceUSD) * item.quantity)}`, 208, y + 12, { align: "right" });
+      y += 28;
+    });
 
-      y += 20;
+    pdf.line(10, y, 210, y);
+    y += 12;
+    pdf.setFontSize(12);
+    pdf.text(`Total: ${KHR_SYMBOL}${formatKHR(totalKHR)}`, 110, y, { align: "center" });
 
-      const qrImg = new Image();
-      qrImg.src = qrcode;
-      await new Promise((res) => { qrImg.onload = res; });
-      pdf.addImage(qrImg, "PNG", 65, y, 90, 90);
-      y += 100;
+    y += 20;
 
-      pdf.setFontSize(10);
-      pdf.text("សូមអរគុណ! សូមអញ្ជើញមកម្តងទៀត!", 110, y, { align: "center" });
+    const qrImg = new Image();
+    qrImg.src = qrcode;
+    await new Promise((res) => { qrImg.onload = res; });
+    pdf.addImage(qrImg, "PNG", 65, y, 90, 90);
+    y += 100;
 
-      const pdfBlob = pdf.output("blob");
-      const url = URL.createObjectURL(pdfBlob);
+    pdf.setFontSize(10);
+    pdf.text("សូមអរគុណ! សូមអញ្ជើញមកម្តងទៀត!", 110, y, { align: "center" });
+
+    const pdfBlob = pdf.output("blob");
+    const url = URL.createObjectURL(pdfBlob);
+
+    if (isMounted) {
       setPdfUrl(url);
-    };
+    }
+  };
 
-    generatePDF();
+  generatePDF();
 
-    // Cleanup URL on close
-    return () => {
-      if (pdfUrl) {
-        URL.revokeObjectURL(pdfUrl);
-        setPdfUrl(null);
-      }
-    };
-  }, [show, order, shopName, orderId, totalKHR]);
+  return () => {
+    isMounted = false;
+  };
+  // ✅ leave dependency array as is
+}, [show, order, shopName, orderId, totalKHR]);
+
 
   if (!show) return null;
 
