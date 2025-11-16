@@ -57,8 +57,8 @@ function ReceiptModal({ show, onClose, order, orderId, shopName }) {
             background: white;
             padding: 15px;
             margin: 0 auto;
-            width: 80mm;
-            max-width: 80mm;
+            width: 100%;
+            max-width: 100%;
             box-sizing: border-box;
         }
 
