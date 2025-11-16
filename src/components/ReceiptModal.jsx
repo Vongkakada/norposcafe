@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { KHR_SYMBOL, formatKHR } from "../utils/formatters";
 import qrcode from "../assets/qrcode.jpg";
 import logo from "../assets/logo.png";
+import jsPDF from "jspdf"; // make sure to npm install jspdf
 
 const SHOP_STATIC_DETAILS = {
   address: "ផ្ទះលេខ 137 , ផ្លូវ 223, កំពង់ចាម",
@@ -10,29 +11,18 @@ const SHOP_STATIC_DETAILS = {
 };
 
 function ReceiptModal({ show, onClose, order, orderId, shopName }) {
-  const [receiptDataUrl, setReceiptDataUrl] = useState(null);
+  const [pdfBlobUrl, setPdfBlobUrl] = useState(null);
 
   useEffect(() => {
     if (!show) return;
 
-    const generateReceiptImage = async () => {
-      const canvas = document.createElement("canvas");
-      const ctx = canvas.getContext("2d");
-      const width = 384;
-      const padding = 12;
-      const lineHeight = 20;
+    const generatePDF = async () => {
+      const doc = new jsPDF({ unit: "px", format: [384, 600] }); // 58mm width ~384px
       const now = new Date();
+      const padding = 12;
       let y = padding;
 
-      // estimate height
-      const height = 70 + lineHeight * 6 + order.length * lineHeight * 2.5 + 100 + padding * 3;
-      canvas.width = width;
-      canvas.height = height;
-
-      ctx.fillStyle = "#fff";
-      ctx.fillRect(0, 0, width, height);
-      ctx.fillStyle = "#000";
-
+      // logo
       const loadImage = (src) =>
         new Promise((resolve, reject) => {
           const img = new Image();
@@ -42,96 +32,75 @@ function ReceiptModal({ show, onClose, order, orderId, shopName }) {
           img.src = src;
         });
 
-      const drawLine = (ctx, x1, y1, x2, y2) => {
-        ctx.beginPath();
-        ctx.moveTo(x1, y1);
-        ctx.lineTo(x2, y2);
-        ctx.strokeStyle = "#000";
-        ctx.lineWidth = 1;
-        ctx.stroke();
-      };
-
-      // logo
       const logoImg = await loadImage(logo);
-      const logoW = 50,
-        logoH = 50;
-      ctx.drawImage(logoImg, (width - logoW) / 2, y, logoW, logoH);
-      y += logoH + 8;
+      doc.addImage(logoImg, "PNG", (384 - 50) / 2, y, 50, 50);
+      y += 50 + 8;
 
-      ctx.font = "bold 16px Arial";
-      ctx.textAlign = "center";
-      ctx.fillText(shopName, width / 2, y);
-      y += lineHeight;
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(16);
+      doc.text(shopName, 384 / 2, y, { align: "center" });
+      y += 20;
 
-      ctx.font = "12px Arial";
-      ctx.fillText(SHOP_STATIC_DETAILS.address, width / 2, y);
-      y += lineHeight;
-      ctx.fillText(`Tel: ${SHOP_STATIC_DETAILS.tel}`, width / 2, y);
-      y += lineHeight;
+      doc.setFontSize(12);
+      doc.setFont("helvetica", "normal");
+      doc.text(SHOP_STATIC_DETAILS.address, 384 / 2, y, { align: "center" });
+      y += 16;
+      doc.text(`Tel: ${SHOP_STATIC_DETAILS.tel}`, 384 / 2, y, { align: "center" });
+      y += 16;
 
-      ctx.font = "11px Arial";
-      ctx.fillText(`${now.toLocaleDateString()} ${now.toLocaleTimeString()}`, width / 2, y);
-      y += lineHeight;
-      ctx.fillText(`Invoice: ${orderId}`, width / 2, y);
-      y += lineHeight + 4;
+      doc.setFontSize(11);
+      doc.text(`${now.toLocaleDateString()} ${now.toLocaleTimeString()}`, 384 / 2, y, { align: "center" });
+      y += 16;
+      doc.text(`Invoice: ${orderId}`, 384 / 2, y, { align: "center" });
+      y += 16;
 
-      drawLine(ctx, padding, y, width - padding, y);
+      doc.setLineWidth(0.5);
+      doc.line(padding, y, 384 - padding, y);
       y += 8;
 
-      ctx.textAlign = "left";
-      ctx.font = "12px Arial";
+      // Items
+      doc.setFontSize(12);
       order.forEach((item) => {
-        ctx.fillText(`${item.khmerName}`, padding, y);
-        y += lineHeight;
-        ctx.fillText(`${item.englishName || ""} x${item.quantity}`, padding + 4, y);
-        ctx.textAlign = "right";
-        ctx.fillText(
-          `${KHR_SYMBOL}${formatKHR((item.priceKHR || item.priceUSD) * item.quantity)}`,
-          width - padding,
-          y
-        );
-        ctx.textAlign = "left";
-        y += lineHeight + 2;
+        doc.text(`${item.khmerName}`, padding, y);
+        y += 16;
+        doc.text(`${item.englishName || ""} x${item.quantity}`, padding + 4, y);
+        const priceText = `${KHR_SYMBOL}${formatKHR((item.priceKHR || item.priceUSD) * item.quantity)}`;
+        doc.text(priceText, 384 - padding, y, { align: "right" });
+        y += 20;
       });
 
-      y += 4;
-      drawLine(ctx, padding, y, width - padding, y);
-      y += lineHeight;
-
+      // Total
       const subtotalKHR = order.reduce(
         (sum, item) => sum + (item.priceKHR || item.priceUSD || 0) * item.quantity,
         0
       );
+      doc.setFont("helvetica", "bold");
+      doc.text(`Total: ${KHR_SYMBOL}${formatKHR(subtotalKHR)}`, 384 / 2, y, { align: "center" });
+      y += 20;
 
-      ctx.font = "bold 14px Arial";
-      ctx.textAlign = "center";
-      ctx.fillText(`Total: ${KHR_SYMBOL}${formatKHR(subtotalKHR)}`, width / 2, y);
-      y += lineHeight + 4;
-
-      drawLine(ctx, padding, y, width - padding, y);
-      y += 12;
-
-      // QR
+      // QR code
       const qrImg = await loadImage(qrcode);
-      const qrSize = 90;
-      ctx.drawImage(qrImg, (width - qrSize) / 2, y, qrSize, qrSize);
-      y += qrSize + 10;
+      doc.addImage(qrImg, "PNG", (384 - 90) / 2, y, 90, 90);
+      y += 90 + 10;
 
-      ctx.font = "12px Arial";
-      ctx.fillText("សូមអរគុណ! សូមអញ្ជើញមកម្តងទៀត!", width / 2, y);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(12);
+      doc.text("សូមអរគុណ! សូមអញ្ជើញមកម្តងទៀត!", 384 / 2, y, { align: "center" });
 
-      const dataUrl = canvas.toDataURL("image/png");
-      setReceiptDataUrl(dataUrl);
+      const pdfBlob = doc.output("blob");
+      const pdfUrl = URL.createObjectURL(pdfBlob);
+      setPdfBlobUrl(pdfUrl);
     };
 
-    generateReceiptImage();
+    generatePDF();
   }, [show, order, orderId, shopName]);
 
-  const handlePrint = () => {
-    if (!receiptDataUrl) return;
-    const win = window.open();
-    win.document.write(`<img src="${receiptDataUrl}" onload="window.print();window.close()" />`);
-    win.document.close();
+  const handlePrintRawBT = () => {
+    if (!pdfBlobUrl) return;
+    // RawBT URL for PDF
+    window.location.href = `rawbt:pdf,${pdfBlobUrl}`;
+    // revoke after short delay
+    setTimeout(() => URL.revokeObjectURL(pdfBlobUrl), 5000);
   };
 
   if (!show) return null;
@@ -143,17 +112,17 @@ function ReceiptModal({ show, onClose, order, orderId, shopName }) {
           ×
         </span>
 
-        <h3>Receipt Preview</h3>
-        {receiptDataUrl ? (
-          <img src={receiptDataUrl} alt="Receipt Preview" style={{ width: "100%", maxWidth: 400 }} />
+        <h3>Receipt Preview (PDF)</h3>
+        {pdfBlobUrl ? (
+          <iframe src={pdfBlobUrl} title="Receipt PDF" style={{ width: "100%", height: 400 }} />
         ) : (
-          <p>កំពុងបង្កើត...</p>
+          <p>កំពុងបង្កើត PDF...</p>
         )}
 
         <div style={{ marginTop: 12, display: "flex", gap: 10 }}>
           <button onClick={onClose}>បោះបង់</button>
-          <button onClick={handlePrint} disabled={!receiptDataUrl}>
-            🖨️ Print
+          <button onClick={handlePrintRawBT} disabled={!pdfBlobUrl}>
+            🖨️ Print via RawBT
           </button>
         </div>
       </div>
