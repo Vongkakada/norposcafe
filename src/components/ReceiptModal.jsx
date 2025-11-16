@@ -59,7 +59,7 @@ function ReceiptModal({ show, onClose, order, orderId, shopName }) {
             line-height:1.4;
         }
         .logo img { 
-                    width:45px; 
+                    width:60px; 
                     height:auto; 
                     display:block; 
                     margin:0 auto 8px; 
@@ -84,7 +84,7 @@ function ReceiptModal({ show, onClose, order, orderId, shopName }) {
             margin-top:8px;
         }
         .qr { text-align:center; margin:10px 0; }
-        .qr img { width:50mm; height:50mm; padding:3px; border:1px solid #000; background:white; }
+        .qr img { width:40mm; height:40mm; padding:3px; border:1px solid #000; background:white; }
         .footer { text-align:center; margin-top:10px; font-weight:bold; font-size:9.5pt; }
 
         /* សំខាន់បំផុត: បង្ខំឲ្យ Print ចេញតែ 1 Page គត់ */
@@ -129,7 +129,7 @@ function ReceiptModal({ show, onClose, order, orderId, shopName }) {
         <div class="divider"></div>
 
         <table>
-            <thead><tr><th>មុខទំនិញ</th><th>ចំ.</th><th>តម្លៃ</th></tr></thead>
+            <thead><tr><th>មុខទំនិញ</th><th>ចំនួន</th><th>តម្លៃ</th></tr></thead>
             <tbody>
                 ${order.map(item => `
                     <tr>
@@ -161,7 +161,9 @@ function ReceiptModal({ show, onClose, order, orderId, shopName }) {
         `);
 
         receiptWindow.document.close();
-        setTimeout(() => onClose(), 1000);
+        setTimeout(() => {
+                            onClose(); // បិទ modal ដោយស្វ័យប្រវត្តិបន្ទាប់ពី Print
+                        }, 1500);
 
     }, [show, order, orderId, shopName, onClose]);
 

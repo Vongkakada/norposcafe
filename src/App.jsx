@@ -284,8 +284,8 @@ function App() {
                         orderId={currentDisplayOrderId}
                         onUpdateQuantity={updateItemQuantity}
                         onClearOrder={clearOrder}
-                        onProcessPayment={processPayment}
-                        exchangeRate={exchangeRate}
+                        onProcessPayment={processPayment}   // បន្ថែម prop នេះ
+                        shopName={SHOP_NAME}
                     />
                 </div>
             )}

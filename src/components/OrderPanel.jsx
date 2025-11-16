@@ -2,17 +2,15 @@
 import React, { useState } from 'react';
 import OrderItemEntry from './OrderItemEntry';
 import { KHR_SYMBOL, formatKHR } from '../utils/formatters';
-import ReceiptModal from './ReceiptModal';
 
 function OrderPanel({
   currentOrder,
   orderId,
   onUpdateQuantity,
   onClearOrder,
-  shopName = "ហាងលក់ទំនិញ",
+  shopName = "ន កាហ្វេ",
+  onProcessPayment, // ថ្មី: ប្រើ function ពី App.jsx
 }) {
-  const [showReceipt, setShowReceipt] = useState(false);
-
   const subtotalKHR = currentOrder.reduce(
     (sum, item) => sum + (item.priceKHR || item.priceUSD || 0) * item.quantity,
     0
@@ -57,36 +55,18 @@ function OrderPanel({
           className="btn-clear" 
           onClick={onClearOrder} 
           disabled={currentOrder.length === 0}
-          style={{
-            opacity: currentOrder.length === 0 ? 0.5 : 1,
-            cursor: currentOrder.length === 0 ? 'not-allowed' : 'pointer'
-          }}
         >
-          🗑️ លុបការកម្ម៉ង់
+          លុបការកម្ម៉ង់
         </button>
 
-      <button 
+        <button 
           className="btn-pay" 
-          onClick={() => setShowReceipt(true)} 
+          onClick={onProcessPayment} // ប្រើ function ពី App.jsx (ដែលមាន save + print)
           disabled={currentOrder.length === 0}
-          style={{
-              opacity: currentOrder.length === 0 ? 0.5 : 1,
-              cursor: currentOrder.length === 0 ? 'not-allowed' : 'pointer'
-          }}
-      >
-          គិតលុយ
-      </button>
+        >
+          គិតលុយ + Print
+        </button>
       </div>
-
-      {showReceipt && (
-          <ReceiptModal
-              show={showReceipt}
-              onClose={() => setShowReceipt(false)}
-              order={currentOrder}
-              orderId={orderId}
-              shopName={shopName}
-          />
-      )}
     </div>
   );
 }
