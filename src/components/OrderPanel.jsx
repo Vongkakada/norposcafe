@@ -65,27 +65,27 @@ function OrderPanel({
           🗑️ លុបការកម្ម៉ង់
         </button>
 
-        <button 
+      <button 
           className="btn-pay" 
           onClick={() => setShowReceipt(true)} 
           disabled={currentOrder.length === 0}
           style={{
-            opacity: currentOrder.length === 0 ? 0.5 : 1,
-            cursor: currentOrder.length === 0 ? 'not-allowed' : 'pointer'
+              opacity: currentOrder.length === 0 ? 0.5 : 1,
+              cursor: currentOrder.length === 0 ? 'not-allowed' : 'pointer'
           }}
-        >
-          💰 គិតលុយ
-        </button>
+      >
+          គិតលុយ
+      </button>
       </div>
 
       {showReceipt && (
-        <ReceiptModal
-          show={showReceipt}
-          onClose={() => setShowReceipt(false)}
-          order={currentOrder}
-          orderId={orderId}
-          shopName={shopName}
-        />
+          <ReceiptModal
+              show={showReceipt}
+              onClose={() => setShowReceipt(false)}
+              order={currentOrder}
+              orderId={orderId}
+              shopName={shopName}
+          />
       )}
     </div>
   );
