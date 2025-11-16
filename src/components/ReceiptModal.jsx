@@ -59,19 +59,19 @@ function ReceiptModal({ show, onClose, order, orderId, shopName }) {
 
         .receipt-container {
             background: white;
-            padding: 30px;
+            padding: 20px;
             border-radius: 8px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            max-width: 400px;
             width: 100%;
+            max-width: 80mm;
         }
 
         .receipt-print-area {
             font-family: 'Courier New', Courier, monospace;
-            font-size: 10pt;
+            font-size: 9pt;
             color: #000;
-            width: 80mm;
-            margin: 0 auto;
+            width: 100%;
+            margin: 0;
         }
 
         .receipt-logo-top {
@@ -80,45 +80,45 @@ function ReceiptModal({ show, onClose, order, orderId, shopName }) {
         }
 
         .receipt-logo {
-            width: 20mm;
+            width: 50px;
             height: auto;
-            max-height: 40mm;
-            filter: brightness(0) saturate(100%);
+            max-height: 50px;
         }
 
         .receipt-header {
             text-align: center;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
         }
 
         .receipt-header h3 {
-            margin: 5px 0;
+            margin: 3px 0;
             font-family: var(--font-family);
-            font-size: 1.2em;
+            font-size: 1.1em;
             color: #000;
         }
 
         .receipt-header p {
-            margin: 2px 0;
-            font-size: 0.85em;
+            margin: 1px 0;
+            font-size: 0.8em;
+            line-height: 1.3;
         }
 
         .receipt-divider {
             border-top: 1px dashed #555;
-            margin: 8px 0;
+            margin: 6px 0;
         }
 
         .receipt-items-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 12px;
-            font-size: 0.9em;
+            margin-bottom: 8px;
+            font-size: 0.85em;
         }
 
         .receipt-items-table th,
         .receipt-items-table td {
             text-align: left;
-            padding: 4px 0;
+            padding: 2px 0;
             border-bottom: 1px dotted #888;
         }
 
@@ -143,39 +143,39 @@ function ReceiptModal({ show, onClose, order, orderId, shopName }) {
         .receipt-summary-line {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 4px;
-            font-size: 0.9em;
+            margin-bottom: 3px;
+            font-size: 0.85em;
         }
 
         .receipt-summary-line.total {
             font-weight: bold;
-            font-size: 1.1em;
-            margin-top: 8px;
-            padding-top: 8px;
+            font-size: 1em;
+            margin-top: 6px;
+            padding-top: 6px;
             border-top: 1px solid #555;
         }
 
         .receipt-qr-code {
             text-align: center;
-            margin: 15px 0;
+            margin: 10px 0;
         }
 
         .receipt-qr-code p {
-            font-size: 0.8em;
-            margin-bottom: 8px;
+            font-size: 0.75em;
+            margin-bottom: 6px;
             font-family: var(--font-family);
         }
 
         .receipt-qr-code img {
-            width: 100px;
-            height: 100px;
+            width: 80px;
+            height: 80px;
             border: 1px solid #ccc;
         }
 
         .receipt-footer {
             text-align: center;
-            font-size: 0.85em;
-            margin-top: 12px;
+            font-size: 0.8em;
+            margin-top: 8px;
         }
 
         .button-container {
@@ -217,13 +217,14 @@ function ReceiptModal({ show, onClose, order, orderId, shopName }) {
         /* Print Styles */
         @page {
             size: 80mm auto;
-            margin: 6mm;
+            margin: 0;
         }
 
         @media print {
             body {
                 background: white;
                 padding: 0;
+                margin: 0;
             }
 
             .button-container {
@@ -232,17 +233,52 @@ function ReceiptModal({ show, onClose, order, orderId, shopName }) {
 
             .receipt-container {
                 box-shadow: none;
-                padding: 0;
+                padding: 5mm;
                 margin: 0;
+                width: 80mm;
+                max-width: 80mm;
             }
 
             .receipt-print-area {
-                width: 80mm;
+                width: 100%;
+                font-size: 8pt;
+            }
+
+            .receipt-logo {
+                max-height: 40px;
+            }
+
+            .receipt-header h3 {
+                font-size: 1em;
+            }
+
+            .receipt-header p {
+                font-size: 0.75em;
+            }
+
+            .receipt-items-table {
+                font-size: 0.8em;
+            }
+
+            .receipt-summary-line {
+                font-size: 0.8em;
+            }
+
+            .receipt-qr-code {
+                margin: 8px 0;
+            }
+
+            .receipt-qr-code p {
+                font-size: 0.7em;
             }
 
             .receipt-qr-code img {
                 width: 60px !important;
                 height: 60px !important;
+            }
+
+            .receipt-footer {
+                font-size: 0.75em;
             }
         }
     </style>
