@@ -2,16 +2,17 @@
 import React from 'react';
 import OrderItemEntry from './OrderItemEntry';
 import { KHR_SYMBOL, formatKHR } from '../utils/formatters';
+
 function OrderPanel({
   currentOrder,
   orderId,
   onUpdateQuantity,
   onClearOrder,
-  shopName = "ន កាហ្វេ",
-  onProcessPayment, // ថ្មី: ប្រើ function ពី App.jsx
+  onProcessPayment,
+  shopName = "ន កាហ្វេ"
 }) {
   const subtotalKHR = currentOrder.reduce(
-    (sum, item) => sum + (item.priceKHR || item.priceUSD || 0) * item.quantity,
+    (sum, item) => sum + (item.priceKHR || 0) * item.quantity,
     0
   );
   const totalKHR = subtotalKHR;
@@ -26,7 +27,7 @@ function OrderPanel({
         ) : (
           currentOrder.map(item => (
             <OrderItemEntry
-              key={item.khmerName + (item.priceKHR || item.priceUSD || 0)}
+              key={`${item.khmerName}-${item.priceKHR}`}
               item={item}
               onUpdateQuantity={onUpdateQuantity}
             />
@@ -38,32 +39,32 @@ function OrderPanel({
         <div className="summary-line">
           <span>សរុបរង (Subtotal):</span>
           <span className="currency-value">
-            {KHR_SYMBOL}{formatKHR(subtotalKHR || 0)}
+            {KHR_SYMBOL}{formatKHR(subtotalKHR)}
           </span>
         </div>
         <div className="summary-line total order-total">
           <span>សរុប (Total):</span>
           <span className="currency-value">
-            {KHR_SYMBOL}{formatKHR(totalKHR || 0)}
+            {KHR_SYMBOL}{formatKHR(totalKHR)}
           </span>
         </div>
       </div>
 
       <div className="action-buttons">
-        <button 
-          className="btn-clear" 
-          onClick={onClearOrder} 
+        <button
+          className="btn-clear"
+          onClick={onClearOrder}
           disabled={currentOrder.length === 0}
         >
           លុបការកម្ម៉ង់
         </button>
 
-        <button 
-          className="btn-pay" 
-          onClick={onProcessPayment} // ប្រើ function ពី App.jsx (ដែលមាន save + print)
+        <button
+          className="btn-pay"
+          onClick={onProcessPayment}
           disabled={currentOrder.length === 0}
         >
-          គិតលុយ
+          គិតលុយ និងបោះពុម្ភ
         </button>
       </div>
     </div>
