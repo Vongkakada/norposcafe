@@ -1,0 +1,58 @@
+/* src/App.css or src/index.css */
+/* Import Kantumruy Pro font if you haven't already */
+@import url('https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@300;400;500;700&display=swap');
+
+:root {
+    --primary-color: #A0522D;
+    --secondary-color: #D2B48C;
+    --accent-color: #FF8C00;
+    --background-color: #FDF5E6;
+    --surface-color: #FFFFFF;
+    --text-color: #4A3B31;
+    --text-light-color: #705446;
+    --border-color: #E0D6CC;
+    --font-family: 'Kantumruy Pro', sans-serif;
+}
+
+body {
+    font-family: var(--font-family);
+    margin: 0;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    min-height: 100vh;
+}
+
+.pos-main-container {
+    display: flex;
+    width: 100%;
+    max-width: 1300px; /* Or your preferred max-width */
+    height: 90vh; /* Adjust as needed */
+    margin: 20px auto; /* Center the POS */
+    background-color: var(--surface-color);
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    overflow: hidden; /* Important for child panel scrolling */
+}
+
+/* Responsive adjustments for the main container */
+@media (max-width: 768px) {
+    .pos-main-container {
+        flex-direction: column; /* Stack panels on mobile */
+        height: auto; /* Allow height to grow based on content */
+        margin: 0;
+        border-radius: 0;
+        box-shadow: none;
+        min-height: 100vh;
+    }
+    /* Ensure panels take full width and scroll independently if needed */
+    .menu-panel-container, .order-panel-placeholder /* and later .order-panel-container */ {
+        flex: 1 1 auto; /* Allow them to grow and shrink */
+        width: 100%;
+        height: 50vh; /* Example: give them half screen height, adjust as needed or use auto */
+        border-right: none; /* Remove border when stacked */
+        border-bottom: 1px solid var(--border-color); /* Add border between stacked panels */
+    }
+    .menu-panel-container:last-child, .order-panel-placeholder:last-child {
+        border-bottom: none;
+    }
+}

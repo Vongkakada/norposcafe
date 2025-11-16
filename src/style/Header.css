@@ -1,0 +1,99 @@
+/* src/style/Header.css */
+.app-main-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    background-color: var(--primary-color); /* ឬពណ៌ផ្សេងសម្រាប់ Header */
+    color: var(--surface-color);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    box-sizing: border-box;
+    margin-bottom: 15px; /* គម្លាតមុន app-navigation */
+    position: sticky; /* ធ្វើឲ្យ Header នៅខាងលើពេល scroll */
+    top: 0;
+    z-index: 100; /* ធានាថា Header នៅពីលើគេ */
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+}
+
+.header-logo {
+    height: 40px; /* កែសម្រួលតាមតម្រូវការ */
+    width: auto;
+    margin-right: 12px;
+    border-radius: 4px; 
+}
+
+.header-shop-name {
+    font-size: 1.25em;
+    font-weight: bold;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+}
+
+.exchange-rate-label {
+    margin-right: 8px;
+    font-size: 0.95em;
+}
+
+.exchange-rate-input {
+    width: 50px; /* កែសម្រួលតាមតម្រូវការ */
+    padding: 7px 9px;
+    border: 1px solid var(--secondary-color);
+    border-radius: 4px;
+    font-family: var(--font-family);
+    font-size: 0.95em;
+    text-align: right;
+    background-color: var(--surface-color);
+    color: var(--text-color);
+}
+
+.exchange-rate-input[type=number]::-webkit-inner-spin-button,
+.exchange-rate-input[type=number]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.exchange-rate-input[type=number] {
+  -moz-appearance: textfield; /* Firefox */
+}
+
+.exchange-rate-currency {
+    margin-left: 8px;
+    font-size: 0.95em;
+    font-weight: 500;
+}
+
+/* Responsive adjustments for header */
+@media (max-width: 650px) {
+    .app-main-header {
+        align-items: stretch; /* ធ្វើឲ្យធាតុខាងក្នុងពេញទទឹង */
+        padding: 10px 15px;
+    }
+
+    .header-left {
+        margin-bottom: 10px;
+    }
+    .header-shop-name {
+        font-size: 1.15em;
+
+    }
+
+    .header-right {
+
+        justify-content: end; /* តម្រឹមកណ្តាល */
+    }
+    .exchange-rate-input {
+        width: 50px;
+        flex-grow: 1; /* អាចឲ្យ input រីកតាមដែលអាច */
+        max-width: 50px;
+    }
+    .exchange-rate-label, .exchange-rate-currency {
+        font-size: 0.9em;
+    }
+}

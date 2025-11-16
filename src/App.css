@@ -1,0 +1,1316 @@
+/* src/App.css */
+@import url('https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@300;400;500;700&display=swap');
+
+:root {
+    --primary-color: #A0522D;
+    --secondary-color: #D2B48C;
+    --accent-color: #FF8C00;
+    --background-color: #FDF5E6;
+    --surface-color: #FFFFFF;
+    --text-color: #4A3B31;
+    --text-light-color: #705446;
+    --border-color: #E0D6CC;
+    --font-family: 'Kantumruy Pro', sans-serif;
+}
+
+body {
+    font-family: var(--font-family);
+    margin: 0;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    min-height: 100vh;
+    box-sizing: border-box;
+}
+
+#root {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
+
+.app-navigation {
+    margin-bottom: 20px;
+    text-align: center;
+    width: 100%;
+    max-width: 1300px;
+}
+
+.app-navigation button {
+    padding: 10px 20px;
+    margin: 0 5px;
+    background: var(--secondary-color);
+    color: var(--text-color);
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-family: var(--font-family);
+    font-size: 1em;
+    transition: background-color 0.2s ease;
+}
+.app-navigation button:hover {
+    background-color: #C0A070;
+}
+.app-navigation button.active-view {
+    background: var(--primary-color);
+    color: var(--surface-color);
+}
+
+.pos-container {
+    display: flex;
+    flex-direction: column; 
+    width: 100%;
+    max-width: 1300px; 
+    height: calc(90vh - 60px); 
+    min-height: 600px;
+    background-color: var(--surface-color);
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+}
+
+.pos-view-container.pos-container {
+    /* Default is column for mobile, media query below changes to row */
+}
+
+.report-view-container.pos-container {
+    flex-direction: column; 
+    align-items: stretch;
+    overflow-y: auto; 
+}
+
+/* Add to App.css */
+.loading-indicator {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  font-style: italic;
+  color: var(--text-light-color);
+}
+.full-page-loader {
+    height: calc(80vh - 100px); /* Adjust based on your header/nav height */
+    font-size: 1.2em;
+}
+
+/* src/App.css */
+/* ... (existing styles, including .deleted-row, .btn-delete-order, .status-deleted) ... */
+
+.delete-reason-display {
+    font-size: 0.8em;
+    color: #757575; /* Gray color for reason */
+    margin-top: 2px;
+}
+
+.delete-reason-cell {
+    font-size: 0.85em;
+    color: #d9534f;
+    font-weight: 500;
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    display: inline-block;
+}
+
+/* Styles for Delete Reason Modal */
+.delete-reason-modal .modal-content {
+    max-width: 450px; /* Adjust width as needed */
+    padding: 25px;
+}
+
+.delete-reason-modal h4 {
+    margin-top: 0;
+    color: var(--primary-color);
+    margin-bottom: 15px;
+}
+
+.delete-reason-modal p {
+    margin-bottom: 10px;
+    font-size: 0.95em;
+}
+
+.delete-reason-modal textarea {
+    font-family: var(--font-family);
+    font-size: 0.9em;
+}
+
+.delete-reason-modal .modal-content button {
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-family: var(--font-family);
+}
+
+@media (min-width: 768px) { 
+    .pos-view-container.pos-container {
+        flex-direction: row; 
+    }
+}
+@media (min-width: 1024px) { 
+     .pos-container {
+        /* height: 85vh; */
+     }
+}
+
+.menu-panel {
+    flex: 2.5;
+    padding: 20px;
+    overflow-y: auto;
+    background-color: #FFFBF5;
+    border-right: 1px solid var(--border-color); 
+}
+.order-panel {
+    flex: 1.5;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    
+    background-color: #FAFAFA;
+}
+
+@media (max-width: 767px) { 
+    .pos-container {
+        height: auto; 
+        max-height: none;
+    }
+    .menu-panel {
+        border-right: none;
+        border-bottom: 1px solid var(--border-color);
+    }
+    .order-panel {
+       overflow-y: visible; 
+    }
+}
+
+.menu-panel h2, .order-panel h2, .sales-report-panel h2 {
+    color: var(--primary-color);
+    margin-top: 0;
+    border-bottom: 2px solid var(--primary-color);
+    padding-bottom: 10px;
+    font-weight: 700;
+    font-size: 1.4em;
+}
+
+/* Styles for Category Tabs */
+.category-tabs {
+    display: flex;
+    flex-wrap: wrap; 
+    gap: 8px;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--secondary-color);
+}
+
+.category-tab {
+    padding: 8px 15px;
+    background-color: var(--surface-color);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    border-radius: 20px; /* Pill shape */
+    cursor: pointer;
+    font-family: var(--font-family);
+    font-size: 0.9em;
+    font-weight: 500;
+    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.category-tab:hover {
+    background-color: var(--secondary-color);
+    border-color: var(--primary-color);
+    color: var(--text-color);
+}
+
+.category-tab.active {
+    background-color: var(--primary-color);
+    color: var(--surface-color);
+    border-color: var(--primary-color);
+    font-weight: 600;
+}
+
+.empty-category-message {
+    text-align: center;
+    color: var(--text-light-color);
+    margin-top: 20px;
+    font-style: italic;
+    font-size: 0.95em;
+}
+
+.menu-items-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+}
+
+@media (max-width: 900px) {
+    .menu-items-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 600px) {
+    .menu-items-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+
+.menu-item {
+    background-color: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 12px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 150px;
+}
+.menu-item:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+    border-color: var(--primary-color);
+}
+.menu-item .item-icon {
+    font-size: 1.8em;
+    margin-bottom: 15px;
+    color: var(--accent-color);
+    height: 30px;
+}
+.menu-item .item-name-km {
+    font-weight: 500;
+    font-size: 1.1em;
+    margin-bottom: 4px;
+    color: var(--text-color);
+    min-height: 30px; 
+    flex-grow: 1; 
+}
+.menu-item .item-name-en {
+    font-weight: 400;
+    font-size: 0.75em;
+    margin-bottom: 6px;
+    color: var(--text-light-color);
+    min-height: 15px;
+}
+
+
+.menu-item .item-price-khr {
+    font-size: 0.9em;
+    color: var(--primary-color);
+    font-weight: 700;
+}
+
+.current-order-items {
+    flex-grow: 1;
+    overflow-y: auto;
+    margin-bottom: 15px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 10px;
+    background-color: var(--surface-color);
+    min-height: 150px;
+}
+.current-order-items p.empty-cart {
+    text-align: center;
+    color: var(--text-light-color);
+    margin-top: 40px;
+    font-style: italic;
+    font-size: 0.9em;
+}
+.order-item-entry {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 8px; 
+    border-bottom: 1px dashed var(--border-color);
+    font-size: 0.85em;
+}
+.order-item-entry:last-child { border-bottom: none; }
+.order-item-details { flex-grow: 1; margin-right: 10px; }
+.order-item-name { display: block; font-weight: 500; }
+.order-item-price-single { display:block; font-size: 0.9em; color: var(--text-light-color); }
+.order-item-controls { display: flex; align-items: center; }
+.order-item-controls button {
+    background-color: var(--secondary-color);
+    color: var(--text-color);
+    border: none;
+    width: 24px; 
+    height: 24px; 
+    border-radius: 4px;
+    cursor: pointer;
+    margin: 0 5px;
+    font-weight: bold;
+    line-height: 22px; 
+}
+.order-item-controls button:hover { background-color: var(--accent-color); }
+.order-item-qty { min-width: 20px; text-align: center; font-size: 0.9em; }
+.order-item-total-price { font-weight: 500; min-width: 70px; text-align: right; }
+
+.order-summary {
+    margin-top: auto; 
+    padding-top: 15px;
+    border-top: 1px solid var(--border-color);
+}
+.summary-line {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    font-size: 0.95em;
+}
+
+/* Ensure the left label in summary-line remains visible and doesn't get pushed out by long values */
+.summary-line > span:first-child {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+.summary-line .currency-value {
+    flex: 0 0 auto;
+    margin-left: 12px;
+    text-align: right;
+}
+.summary-line .currency-value .khr {
+    font-size: 0.85em;
+    color: var(--text-light-color);
+    display: block;
+    text-align: right;
+}
+.summary-line.total {
+    font-weight: 700;
+    font-size: 1.25em;
+    color: var(--primary-color);
+    margin-top: 10px;
+}
+.summary-line.total .currency-value .khr { font-size: 1em; color: var(--accent-color); }
+
+/* Emphasized total for OrderPanel */
+.order-total {
+    background: linear-gradient(90deg, rgba(255,248,240,1) 0%, rgba(255,238,220,1) 100%);
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+}
+
+/* Summary card for SalesReport */
+.report-summary-card {
+    display: flex;
+    gap: 16px;
+    margin: 12px 0 18px 0;
+    padding: 10px;
+    border-radius: 8px;
+    background: #FFF8EE;
+    align-items: center;
+}
+.report-summary-card .summary-item { display:flex; flex-direction:column; }
+.report-summary-card .summary-label { font-size: 0.85em; color: var(--text-light-color); }
+.report-summary-card .summary-value { font-weight: 700; font-size: 1.1em; color: var(--primary-color); }
+
+/* Accessibility: focus styles for quantity controls */
+.order-item-controls button:focus {
+    outline: 2px dashed var(--primary-color);
+    outline-offset: 2px;
+}
+
+.action-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 20px;
+}
+.action-buttons button {
+    padding: 14px;
+    border-radius: 8px;
+    border: none;
+    font-family: var(--font-family);
+    font-size: 1.05em;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+.btn-clear { background-color: var(--secondary-color); color: var(--text-color); }
+.btn-clear:hover { background-color: #C0A070; }
+.btn-pay { background-color: var(--accent-color); color: var(--surface-color); }
+.btn-pay:hover { background-color: #E87C00; }
+
+/* Receipt Modal Styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0; top: 0;
+    width: 100%; height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.6);
+    justify-content: center;
+    align-items: center;
+}
+.modal.show {
+    display: flex;
+}
+.modal-content {
+    background-color: var(--surface-color);
+    margin: auto;
+    padding: 20px;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 380px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    position: relative;
+}
+.receipt-print-area {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 10pt;
+    color: #000;
+    width: 80mm;
+    margin: 0 auto;
+}
+.receipt-logo-top {
+    text-align: center;
+    margin-bottom: 10px;
+}
+.receipt-logo {
+    width: 20mm;
+    height: auto;
+    max-height: 40mm;
+    filter: brightness(0) saturate(100%);
+}
+.close-button {
+    color: #aaa;
+    position: absolute;
+    top: 8px; right: 12px;
+    font-size: 24px;
+    font-weight: bold;
+    cursor: pointer;
+    font-family: Arial, sans-serif;
+}
+.close-button:hover, .close-button:focus { color: var(--text-color); }
+.receipt-header { text-align: center; margin-bottom: 12px; }
+.receipt-header h3 { margin: 5px 0 2px 0; font-family: var(--font-family); font-size: 1.2em; color: #000;}
+.receipt-header p { margin: 1px 0; font-size: 0.85em; }
+.receipt-items-table { width: 100%; border-collapse: collapse; margin-bottom: 12px; font-size: 0.9em;}
+.receipt-items-table th, .receipt-items-table td { text-align: left; padding: 3px 0; border-bottom: 1px dotted #888; }
+.receipt-items-table th:nth-child(2), .receipt-items-table td:nth-child(2) { text-align: center; }
+.receipt-items-table th:last-child, .receipt-items-table td:last-child { text-align: right; }
+.receipt-items-table tr:last-child td { border-bottom: none; }
+.receipt-divider { border-top: 1px dashed #555; margin: 8px 0; }
+.receipt-summary-line { display: flex; justify-content: space-between; margin-bottom: 2px; font-size: 0.9em;}
+.receipt-summary-line.total { font-weight: bold; margin-top: 4px; font-size: 1em;}
+.receipt-summary-line span:last-child { text-align: right; }
+.receipt-summary-line .khr-val { font-size: 0.9em; color: #444; }
+.receipt-qr-code { text-align: center; margin: 15px 0; }
+.receipt-qr-code img { width: 100px; height: 100px; border: 1px solid #ccc; }
+.receipt-footer { text-align: center; font-size: 0.85em; margin-top: 12px; }
+.print-button-container { text-align: center; margin-top: 20px; display: flex; gap: 10px; justify-content: center; }
+.btn-print {
+    background-color: var(--primary-color);
+    color: var(--surface-color);
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-family: var(--font-family);
+    font-size: 1em;
+}
+.btn-print:hover { background-color: #793D1B; }
+.btn-close-receipt {
+    background-color: var(--secondary-color);
+    color: var(--text-color);
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-family: var(--font-family);
+    font-size: 1em;
+}
+.btn-close-receipt:hover { background-color: #C0A070; }
+
+/* Sales Report Panel Styles */
+.sales-report-panel {
+    padding: 20px;
+    width: 100%; 
+    box-sizing: border-box;
+    background-color: #F5F5F5; 
+}
+.sales-report-panel h2 {
+    /* Styles inherited */
+}
+.report-controls { 
+    margin-bottom: 20px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap; 
+    align-items: center;
+}
+.report-controls button {
+    padding: 8px 15px;
+    background-color: var(--secondary-color);
+    color: var(--text-color);
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-family: var(--font-family);
+    transition: background-color 0.2s ease;
+}
+.report-controls button:hover {
+    background-color: #C0A070;
+}
+.report-controls button.active {
+    background-color: var(--primary-color);
+    color: var(--surface-color);
+}
+
+.report-actions { 
+    margin-top: 20px;
+    margin-bottom: 15px;
+    display: flex;
+    gap: 10px;
+}
+.report-actions button {
+    padding: 10px 18px;
+    background-color: var(--accent-color);
+    color: var(--surface-color);
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-family: var(--font-family);
+    font-size: 0.95em;
+}
+.report-actions button:hover {
+    background-color: #E87C00;
+}
+
+.report-section {
+    margin-bottom: 20px;
+    padding: 15px;
+    background-color: var(--surface-color);
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+.report-section h3 {
+    margin-top: 0;
+    color: var(--accent-color);
+    font-size: 1.2em; 
+    padding-bottom: 5px;
+    border-bottom: 1px solid var(--secondary-color);
+    margin-bottom: 10px;
+}
+.report-section p {
+    font-size: 1em;
+    margin: 8px 0; 
+}
+.report-section .khr-total {
+    font-size: 0.9em;
+    color: var(--text-light-color);
+}
+.report-data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+.report-data-table th, .report-data-table td {
+    border: 1px solid var(--border-color);
+    padding: 8px;
+    text-align: left;
+    font-size: 0.9em;
+}
+.report-data-table th {
+    background-color: var(--secondary-color);
+    color: var(--text-color);
+    font-weight: 600;
+}
+.report-data-table td.number-cell {
+    text-align: right;
+}
+
+/* SalesReport Authentication Styles */
+.auth-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    min-height: 400px;
+}
+
+.auth-container h2 {
+    color: var(--primary-color);
+    margin-bottom: 30px;
+    font-size: 1.8em;
+}
+
+.auth-form {
+    background-color: var(--surface-color);
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    width: 100%;
+    max-width: 350px;
+}
+
+.auth-input-group {
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+}
+
+.auth-input-group label {
+    font-weight: 500;
+    margin-bottom: 8px;
+    color: var(--text-color);
+    font-family: var(--font-family);
+}
+
+.auth-input {
+    padding: 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    font-family: var(--font-family);
+    font-size: 1em;
+    background-color: var(--surface-color);
+    color: var(--text-color);
+}
+
+.auth-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 4px rgba(160, 82, 45, 0.3);
+}
+
+.auth-error {
+    background-color: #ffe6e6;
+    color: #d9534f;
+    padding: 10px;
+    border-radius: 6px;
+    margin-bottom: 15px;
+    text-align: center;
+    font-family: var(--font-family);
+    border: 1px solid #d9534f;
+}
+
+.btn-login {
+    width: 100%;
+    padding: 12px;
+    background-color: var(--primary-color);
+    color: var(--surface-color);
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: var(--font-family);
+    font-size: 1em;
+    font-weight: 600;
+    transition: background-color 0.2s ease;
+}
+
+.btn-login:hover {
+    background-color: #793D1B;
+}
+
+.report-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.report-header h2 {
+    margin: 0;
+    color: var(--primary-color);
+    border-bottom: 2px solid var(--primary-color);
+    padding-bottom: 10px;
+    font-weight: 700;
+    font-size: 1.4em;
+    flex: 1;
+}
+
+.btn-logout {
+    padding: 8px 15px;
+    background-color: #d9534f;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-family: var(--font-family);
+    font-size: 0.9em;
+    transition: background-color 0.2s ease;
+}
+
+.btn-logout:hover {
+    background-color: #c9302c;
+}
+
+/* Stock Management Panel Styles */
+.stock-management-panel {
+    padding: 20px;
+    width: 100%;
+    box-sizing: border-box;
+    background-color: #F5F5F5;
+}
+
+.stock-management-panel h2 {
+    color: var(--primary-color);
+    margin-top: 0;
+    border-bottom: 2px solid var(--primary-color);
+    padding-bottom: 10px;
+    font-weight: 700;
+    font-size: 1.4em;
+}
+
+.stock-controls {
+    margin-bottom: 20px;
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.stock-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.btn-export, .btn-import {
+    padding: 10px 15px;
+    background-color: var(--secondary-color);
+    color: var(--text-color);
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-family: var(--font-family);
+    font-size: 0.95em;
+    transition: background-color 0.2s ease;
+}
+
+.btn-export:hover, .btn-import:hover {
+    background-color: #C0A070;
+}
+
+.btn-delete {
+    padding: 10px 15px;
+    background-color: #E74C3C;
+    color: var(--surface-color);
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-family: var(--font-family);
+    font-size: 0.95em;
+    font-weight: 600;
+    transition: background-color 0.2s ease;
+}
+
+.btn-delete:hover {
+    background-color: #C0392B;
+}
+
+.btn-delete-item {
+    padding: 6px 10px;
+    background-color: #E74C3C;
+    color: var(--surface-color);
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: var(--font-family);
+    font-size: 0.85em;
+    font-weight: 600;
+    margin: 0 2px;
+    transition: background-color 0.2s ease;
+    white-space: nowrap;
+    margin-left: auto;
+}
+
+.btn-delete-item:hover {
+    background-color: #C0392B;
+}
+
+/* Stock table actions cell alignment */
+.stock-table td[data-label="សកម្មភាព"] {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.import-control {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.import-control select {
+    padding: 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    font-family: var(--font-family);
+    background-color: var(--surface-color);
+}
+
+.category-filter {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.category-filter label {
+    font-weight: 500;
+    font-family: var(--font-family);
+}
+
+.category-filter select {
+    padding: 8px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    font-family: var(--font-family);
+    background-color: var(--surface-color);
+    cursor: pointer;
+}
+
+.stock-table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: var(--surface-color);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.stock-table th, .stock-table td {
+    border: 1px solid var(--border-color);
+    padding: 12px;
+    text-align: left;
+    font-size: 0.9em;
+}
+
+.stock-table th {
+    background-color: var(--secondary-color);
+    color: var(--text-color);
+    font-weight: 600;
+}
+
+.stock-table td.number-cell {
+    text-align: right;
+}
+
+.stock-input {
+    width: 80px;
+    padding: 6px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    text-align: center;
+    font-family: var(--font-family);
+}
+
+/* Responsive Stock Table for Mobile */
+@media (max-width: 768px) {
+    .stock-table {
+        font-size: 0.8em;
+    }
+
+    .stock-table th, .stock-table td {
+
+/* Print styles for receipt: force 80mm x 297mm and hide UI chrome */
+@page {
+    size: 80mm 297mm;
+    margin: 0;
+}
+
+@media print {
+    html, body {
+        width: 80mm;
+        height: 297mm;
+        margin: 0;
+        padding: 0;
+    }
+
+    /* Hide everything by default, then reveal only the receipt area */
+    body * {
+        visibility: hidden !important;
+    }
+
+    .receipt-print-area, .receipt-print-area * {
+        visibility: visible !important;
+    }
+
+    /* Remove any background graphics or colors when printing */
+    html, body, .modal, .modal-content, .receipt-print-area, .receipt-print-area * {
+        background: transparent !important;
+        background-image: none !important;
+        box-shadow: none !important;
+    }
+
+    /* Position the receipt at the top-left of the print page */
+    .receipt-print-area {
+        position: absolute !important;
+        left: 0 !important;
+        top: 10mm !important; /* respect larger top margin */
+        width: 80mm !important;
+        box-sizing: border-box !important;
+        page-break-inside: avoid !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        background: #fff !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    /* Remove modal overlay and controls when printing */
+    .modal {
+        background-color: transparent !important;
+    }
+    .modal-content {
+        box-shadow: none !important;
+        background: transparent !important;
+        width: auto !important;
+        max-width: none !important;
+        border-radius: 0 !important;
+        padding: 0 !important;
+    }
+
+    /* Hide action buttons and close control */
+    .print-button-container, .close-button, .btn-close-receipt, .btn-print {
+        display: none !important;
+    }
+
+    /* Adjust logo and QR sizes for printing */
+    .receipt-logo { width: 20mm !important; height: auto !important; }
+    .receipt-qr-code img { width: 60px !important; height: 60px !important; }
+
+    /* Ensure the receipt is kept on one page and not split */
+    .receipt-print-area { page-break-after: always !important; }
+}
+        padding: 8px;
+        font-size: 0.85em;
+    }
+
+    .stock-table th {
+        font-size: 0.8em;
+    }
+
+    .stock-input {
+        width: 60px;
+        padding: 5px;
+        font-size: 0.85em;
+    }
+}
+
+@media (max-width: 480px) {
+    .stock-management-panel {
+        padding: 10px;
+    }
+
+    .stock-table {
+        border: none;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+
+    .stock-table thead {
+        display: none;
+    }
+
+    .stock-table, .stock-table tbody, .stock-table tr, .stock-table td {
+        display: block;
+        width: 100%;
+    }
+
+    .stock-table tr {
+        margin-bottom: 15px;
+        border: 1px solid var(--border-color);
+        border-radius: 5px;
+        overflow: hidden;
+        background-color: var(--surface-color);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .stock-table td {
+        text-align: right;
+        padding: 10px;
+        position: relative;
+        border: none;
+        border-bottom: 1px solid var(--border-color);
+        display: grid;
+        grid-template-columns: 40% 60%;
+        gap: 8px;
+    }
+
+    .stock-table td:before {
+        content: attr(data-label);
+        font-weight: 600;
+        text-align: left;
+        color: var(--primary-color);
+    }
+
+    .stock-table td:last-child {
+        border-bottom: none;
+        display: flex;
+        gap: 5px;
+        justify-content: flex-end;
+    }
+
+    .stock-input {
+        width: 100%;
+        max-width: 70px;
+        padding: 5px;
+        font-size: 0.8em;
+    }
+
+    .btn-adjust {
+        width: 28px;
+        height: 28px;
+        padding: 0;
+        font-size: 0.9em;
+        margin: 0 2px;
+    }
+}
+
+/* Extra small phones */
+@media (max-width: 360px) {
+    .stock-management-panel h2 {
+        font-size: 1.1em;
+        padding-bottom: 8px;
+    }
+
+    .stock-controls {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .stock-table td {
+        padding: 8px;
+        grid-template-columns: 35% 65%;
+    }
+
+    .stock-input {
+        max-width: 60px;
+        font-size: 0.75em;
+    }
+
+    .btn-adjust {
+        width: 26px;
+        height: 26px;
+        font-size: 0.85em;
+    }
+}
+
+.btn-adjust {
+    background-color: var(--secondary-color);
+    color: var(--text-color);
+    border: none;
+    width: 30px;
+    height: 30px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin: 0 4px;
+    font-weight: bold;
+    transition: background-color 0.2s ease;
+}
+
+.btn-adjust:hover {
+    background-color: var(--accent-color);
+    color: var(--surface-color);
+}
+
+/* Add New Item Form Styles */
+.btn-add-item {
+    background-color: var(--accent-color);
+    color: var(--surface-color);
+    border: none;
+    padding: 12px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-family: var(--font-family);
+    font-size: 1em;
+    font-weight: 600;
+    margin-bottom: 15px;
+    transition: background-color 0.2s ease;
+    width: auto;
+}
+
+.btn-add-item:hover {
+    background-color: #E67E00;
+}
+
+.add-item-form {
+    background-color: var(--surface-color);
+    border: 2px solid var(--secondary-color);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.add-item-form h3 {
+    margin-top: 0;
+    color: var(--primary-color);
+    border-bottom: 2px solid var(--secondary-color);
+    padding-bottom: 10px;
+    font-size: 1.2em;
+    font-weight: 600;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group label {
+    font-weight: 600;
+    margin-bottom: 5px;
+    color: var(--text-color);
+    font-size: 0.95em;
+}
+
+.form-input {
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    font-family: var(--font-family);
+    font-size: 0.95em;
+    background-color: #FAFAFA;
+    transition: border-color 0.2s ease;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    background-color: var(--surface-color);
+    box-shadow: 0 0 5px rgba(255, 140, 0, 0.2);
+}
+
+.form-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 20px;
+    border-top: 1px solid var(--border-color);
+    padding-top: 15px;
+}
+
+.btn-submit {
+    background-color: var(--primary-color);
+    color: var(--surface-color);
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-family: var(--font-family);
+    font-size: 0.95em;
+    font-weight: 600;
+    transition: background-color 0.2s ease;
+}
+
+.btn-submit:hover {
+    background-color: #8B4513;
+}
+
+.btn-cancel {
+    background-color: #999;
+    color: var(--surface-color);
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-family: var(--font-family);
+    font-size: 0.95em;
+    font-weight: 600;
+    transition: background-color 0.2s ease;
+}
+
+.btn-cancel:hover {
+    background-color: #777;
+}
+
+/* Print-specific styles */
+@media print {
+    body {
+        background-color: #fff;
+        margin: 0;
+        padding: 5mm;
+        font-family: 'Courier New', Courier, monospace !important;
+        font-size: 10pt;
+        color: #000 !important;
+        width: 80mm;
+    }
+    @page {
+        size: 80mm auto;
+        margin: 0;
+    }
+
+    .app-navigation,
+    .pos-container:not(.printing-sales-report) .menu-panel, 
+    .pos-container:not(.printing-sales-report) .order-panel, 
+    .modal .close-button,
+    .modal .print-button-container, 
+    .action-buttons, 
+    .report-controls, 
+    .report-actions button, 
+    .sales-report-panel:not(.print-this-report),
+    .category-tabs /* Hide category tabs when printing */ { 
+        display: none !important;
+    }
+    
+    .modal.show.printing-receipt .modal-content {
+        position: static;
+        overflow: visible;
+        background-color: transparent;
+        display: block !important;
+        box-shadow: none;
+        border-radius: 0;
+        padding: 0; margin:0;
+        width: 100%;
+        max-width: 100%;
+    }
+    .modal.show.printing-receipt .receipt-print-area {
+        display: block !important;
+        font-size: 9pt;
+    }
+     .modal.show.printing-receipt .receipt-header h3 { font-size: 1.1em; }
+     .modal.show.printing-receipt .receipt-header p, 
+     .modal.show.printing-receipt .receipt-footer, 
+     .modal.show.printing-receipt .receipt-summary-line, 
+     .modal.show.printing-receipt .receipt-items-table { font-size: 0.85em; }
+     .modal.show.printing-receipt .receipt-summary-line.total { font-size: 0.95em;}
+     .modal.show.printing-receipt .receipt-qr-code img { width: 80px; height: 80px; }
+
+    .printing-sales-report .sales-report-panel.print-this-report {
+        display: block !important;
+        background-color: #fff !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+    .printing-sales-report .sales-report-panel.print-this-report h2,
+    .printing-sales-report .sales-report-panel.print-this-report h3 {
+        color: #000 !important;
+        border-color: #888 !important;
+        text-align: center;
+    }
+     .printing-sales-report .sales-report-panel.print-this-report .report-section {
+        box-shadow: none;
+        border: 1px solid #ccc;
+        margin-bottom: 10px;
+        padding: 10px;
+        background-color: #fff !important;
+    }
+    .printing-sales-report .report-data-table th,
+    .printing-sales-report .report-data-table td {
+        border: 1px solid #888 !important;
+        font-size: 9pt !important;
+    }
+    .printing-sales-report .report-data-table th {
+        background-color: #eee !important;
+    }
+
+    table { page-break-inside:auto }
+    tr    { page-break-inside:avoid; page-break-after:auto }
+    thead { display:table-header-group } 
+    tfoot { display:table-footer-group }
+}
