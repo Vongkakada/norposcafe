@@ -2,17 +2,17 @@
 import React, { useState } from 'react';
 import OrderItemEntry from './OrderItemEntry';
 import { KHR_SYMBOL, formatKHR } from '../utils/formatters';
+import jsPDF from 'jspdf';
 
 function OrderPanel({
     currentOrder,
     orderId,
     onUpdateQuantity,
     onClearOrder,
-    onProcessPayment,
-    exchangeRate,
     shopName = "ហាងលក់ទំនិញ",
 }) {
-    const [isProcessing, setIsProcessing] = useState(false);
+    const [isGenerating, setIsGenerating] = useState(false);
+    const [pdfUrl, setPdfUrl] = useState(null);
 
     const subtotalKHR = currentOrder.reduce(
         (sum, item) => sum + (item.priceKHR || item.priceUSD || 0) * item.quantity, 
@@ -20,19 +20,48 @@ function OrderPanel({
     );
     const totalKHR = subtotalKHR;
 
-    const handleProcessPayment = async () => {
-        setIsProcessing(true);
-        try {
-            // Simulate processing payment
-            setTimeout(() => {
-                onProcessPayment();
-                setIsProcessing(false);
-            }, 1000);
-        } catch (error) {
-            console.error('Payment error:', error);
-            alert('មានបញ្ហាក្នុងការការបង់លុយ: ' + error.message);
-            setIsProcessing(false);
-        }
+    const handleGeneratePDF = () => {
+        setIsGenerating(true);
+        const doc = new jsPDF();
+
+        let y = 10;
+        doc.setFontSize(16);
+        doc.text(shopName, 10, y);
+        y += 10;
+        doc.setFontSize(12);
+        doc.text(`Order ID: #${orderId}`, 10, y);
+        y += 10;
+        doc.text('-------------------------------', 10, y);
+        y += 10;
+
+        currentOrder.forEach(item => {
+            const line = `${item.khmerName} x${item.quantity} = ${KHR_SYMBOL}${formatKHR((item.priceKHR || item.priceUSD) * item.quantity)}`;
+            doc.text(line, 10, y);
+            y += 8;
+        });
+
+        y += 5;
+        doc.text('-------------------------------', 10, y);
+        y += 8;
+        doc.text(`Subtotal: ${KHR_SYMBOL}${formatKHR(subtotalKHR)}`, 10, y);
+        y += 8;
+        doc.text(`Total: ${KHR_SYMBOL}${formatKHR(totalKHR)}`, 10, y);
+
+        // Generate PDF blob and create URL for preview
+        const pdfBlob = doc.output('blob');
+        const url = URL.createObjectURL(pdfBlob);
+        setPdfUrl(url);
+        setIsGenerating(false);
+    };
+
+    const handlePrintPDF = () => {
+        if (!pdfUrl) return;
+        const iframe = document.createElement('iframe');
+        iframe.style.display = 'none';
+        iframe.src = pdfUrl;
+        document.body.appendChild(iframe);
+        iframe.contentWindow.focus();
+        iframe.contentWindow.print();
     };
 
     return (
@@ -68,49 +97,35 @@ function OrderPanel({
                 </div>
             </div>
 
-            <div className="action-buttons">
+            <div className="action-buttons" style={{ marginTop: '12px', display: 'flex', gap: '10px' }}>
                 <button 
-                    className="btn-clear" 
-                    onClick={onClearOrder} 
-                    disabled={currentOrder.length === 0 || isProcessing}
-                    style={{
-                        opacity: (currentOrder.length === 0 || isProcessing) ? 0.5 : 1,
-                        cursor: (currentOrder.length === 0 || isProcessing) ? 'not-allowed' : 'pointer'
-                    }}
+                    className="btn-preview"
+                    onClick={handleGeneratePDF}
+                    disabled={currentOrder.length === 0 || isGenerating}
                 >
-                    🗑️ លុបការកម្ម៉ង់
+                    {isGenerating ? '⏳ កំពុងបង្កើត PDF...' : '💰 គិតលុយ'}
                 </button>
+
                 <button 
-                    className="btn-pay" 
-                    onClick={handleProcessPayment} 
-                    disabled={currentOrder.length === 0 || isProcessing}
-                    style={{
-                        opacity: (currentOrder.length === 0 || isProcessing) ? 0.5 : 1,
-                        cursor: (currentOrder.length === 0 || isProcessing) ? 'not-allowed' : 'pointer',
-                        background: isProcessing ? '#ccc' : undefined
-                    }}
+                    className="btn-print"
+                    onClick={handlePrintPDF}
+                    disabled={!pdfUrl}
                 >
-                    {isProcessing ? (
-                        <>
-                            <span style={{ 
-                                display: 'inline-block', 
-                                animation: 'spin 1s linear infinite',
-                                marginRight: '8px'
-                            }}>⏳</span>
-                            កំពុងដំណើរការ...
-                        </>
-                    ) : (
-                        <>💰 គិតលុយ</>
-                    )}
+                    🖨️ Print
                 </button>
             </div>
 
-            <style>{`
-                @keyframes spin {
-                    from { transform: rotate(0deg); }
-                    to { transform: rotate(360deg); }
-                }
-            `}</style>
+            {pdfUrl && (
+                <div style={{ marginTop: '20px' }}>
+                    <iframe 
+                        src={pdfUrl} 
+                        width="100%" 
+                        height="400px" 
+                        title="PDF Preview"
+                        style={{ border: '1px solid #ccc' }}
+                    />
+                </div>
+            )}
         </div>
     );
 }
