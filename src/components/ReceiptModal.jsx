@@ -1,7 +1,7 @@
 // src/components/ReceiptModal.jsx
 import React, { useRef, useEffect } from 'react';
 import { KHR_SYMBOL, formatKHR } from '../utils/formatters';
-import qrcode from '../assets/qrcode.jpg'; // Assuming you have a CSS file for styling
+import qrcode from '../assets/qrcode.jpg';
 import logo from '../assets/logo.png';
 
 const SHOP_STATIC_DETAILS = {
@@ -9,7 +9,7 @@ const SHOP_STATIC_DETAILS = {
     tel: "016 438 555 / 061 91 4444"
 };
 
-function ReceiptModal({ show, onClose, order, orderId, exchangeRate, /* taxRate, */ shopName }) { // << លុប taxRate
+function ReceiptModal({ show, onClose, order, orderId, exchangeRate, shopName }) {
     const receiptRef = useRef(null);
 
     useEffect(() => {
@@ -28,62 +28,60 @@ function ReceiptModal({ show, onClose, order, orderId, exchangeRate, /* taxRate,
     }, []);
 
     if (!show) return null;
+    
     const now = new Date();
     const subtotalKHR = order.reduce((sum, item) => sum + (item.priceKHR || item.priceUSD || 0) * item.quantity, 0);
-    // const taxKHR = subtotalKHR * taxRate; // tax removed
-    const totalKHR = subtotalKHR; // already in KHR
+    const totalKHR = subtotalKHR;
 
     const safeShopNameForQR = shopName.replace(/\s+/g, '_');
     const qrData = `ORDER_ID:${orderId};TOTAL_KHR:${formatKHR(totalKHR)};SHOP_NAME:${safeShopNameForQR}`;
-    const qrCodeUrl = qrcode + `?data=${encodeURIComponent(qrData)}`; // Assuming you have a QR code image
-
+    const qrCodeUrl = qrcode + `?data=${encodeURIComponent(qrData)}`;
 
     const handlePrint = () => {
         const el = receiptRef.current;
-        if (el && typeof window !== 'undefined') {
-            // Convert mm to px (approx at 96dpi): 1mm = 3.7795275591px
-            const mmToPx = 3.7795275591;
-            const pageHeightMm = 297; // target page height in mm
-            const pageMarginMm = 6; // as defined in @page margin
-            const printableHeightPx = (pageHeightMm - pageMarginMm * 2) * mmToPx;
+        if (!el) return;
 
-            // Measure content height
-            const contentHeight = el.scrollHeight;
+        // កំណត់ style សម្រាប់ print
+        const mmToPx = 3.7795275591;
+        const pageHeightMm = 297;
+        const pageMarginMm = 12; // 6mm top + 6mm bottom
+        const printableHeightPx = (pageHeightMm - pageMarginMm) * mmToPx;
+        const contentHeight = el.scrollHeight;
+        const scale = Math.min(1, printableHeightPx / contentHeight);
 
-            // Compute scale to fit content into printable height (cap at 1)
-            const scale = Math.min(1, printableHeightPx / contentHeight);
-
-            if (scale < 1) {
-                el.style.transformOrigin = 'top left';
-                el.style.transform = `scale(${scale})`;
-                // Ensure the printed width accounts for scale so it stays within 80mm
-                el.style.width = `${80 / scale}mm`;
-            } else {
-                // Ensure width is set to 80mm when no scaling
-                el.style.width = '70mm';
-                el.style.transform = '';
-                el.style.transformOrigin = '';
-            }
+        if (scale < 1) {
+            el.style.transformOrigin = 'top left';
+            el.style.transform = `scale(${scale})`;
+            el.style.width = `${80 / scale}mm`;
+        } else {
+            el.style.width = '70mm';
+            el.style.transform = '';
+            el.style.transformOrigin = '';
         }
 
-        // Add a one-time afterprint handler to close the modal automatically
-        const handleAfterPrint = () => {
-            try {
-                // restore styles (in case cleanup didn't run yet)
-                if (el) {
-                    el.style.transform = '';
-                    el.style.transformOrigin = '';
-                    el.style.width = '';
-                }
-                if (typeof onClose === 'function') onClose();
-            } finally {
-                window.removeEventListener('afterprint', handleAfterPrint);
-            }
-        };
-        window.addEventListener('afterprint', handleAfterPrint);
+        // ចាំបន្តិចមុនពេល print ដើម្បីឲ្យ style ត្រូវបាន apply
+        setTimeout(() => {
+            window.print();
+        }, 100);
 
-        // Trigger print. afterprint listener will cleanup styles and close modal.
-        window.print();
+        // ចាប់ event បន្ទាប់ពី print
+        const handleAfterPrint = () => {
+            // ត្រឡប់ style ទៅដើម
+            if (el) {
+                el.style.transform = '';
+                el.style.transformOrigin = '';
+                el.style.width = '';
+            }
+            
+            // បិទ modal
+            if (typeof onClose === 'function') {
+                onClose();
+            }
+            
+            window.removeEventListener('afterprint', handleAfterPrint);
+        };
+        
+        window.addEventListener('afterprint', handleAfterPrint);
     };
 
     return (
@@ -111,8 +109,8 @@ function ReceiptModal({ show, onClose, order, orderId, exchangeRate, /* taxRate,
                             </tr>
                         </thead>
                         <tbody>
-                            {order.map(item => (
-                                <tr key={item.khmerName + (item.priceKHR || item.priceUSD || 0)}>
+                            {order.map((item, index) => (
+                                <tr key={index}>
                                     <td>{item.khmerName} ({item.englishName || ''})</td>
                                     <td>{item.quantity}</td>
                                     <td>{KHR_SYMBOL}{formatKHR((item.priceKHR || item.priceUSD) * item.quantity)}</td>
@@ -124,9 +122,7 @@ function ReceiptModal({ show, onClose, order, orderId, exchangeRate, /* taxRate,
                     <div className="receipt-summary">
                         <div className="receipt-summary-line">
                             <span>សរុបរង:</span>
-                            <span>
-                                {KHR_SYMBOL}{formatKHR(subtotalKHR || 0)}
-                            </span>
+                            <span>{KHR_SYMBOL}{formatKHR(subtotalKHR || 0)}</span>
                         </div>
                         <div className="receipt-divider"></div>
                         <div className="receipt-summary-line total">
@@ -135,7 +131,9 @@ function ReceiptModal({ show, onClose, order, orderId, exchangeRate, /* taxRate,
                         </div>
                     </div>
                     <div className="receipt-qr-code">
-                        <p style={{fontSize:'0.8em', marginBottom:'5px', fontFamily: 'var(--font-family)'}}>សូមស្កេនដើម្បីទូទាត់ ឬមើលព័ត៌មានបន្ថែម</p>
+                        <p style={{fontSize:'0.8em', marginBottom:'5px', fontFamily: 'var(--font-family)'}}>
+                            សូមស្កេនដើម្បីទូទាត់ ឬមើលព័ត៌មានបន្ថែម
+                        </p>
                         <img src={qrCodeUrl} alt="QR Code" />
                     </div>
                     <div className="receipt-footer">
@@ -145,7 +143,6 @@ function ReceiptModal({ show, onClose, order, orderId, exchangeRate, /* taxRate,
                 <div className="print-button-container">
                     <button className="btn-close-receipt" onClick={onClose}>បោះបង់</button>
                     <button className="btn-print" onClick={handlePrint}>បោះពុម្ពវិក្កយបត្រ</button>
-                    
                 </div>
             </div>
         </div>
