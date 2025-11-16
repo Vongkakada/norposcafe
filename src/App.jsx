@@ -1,13 +1,16 @@
-// src/App.jsx — Print Receipt ដំណើរការលើទូរស័ព្ទ Chrome (16 វិច្ឆិកា 2025)
+// =====================================================
+// 1. App.jsx (Print Receipt ដោយ Hidden Modal)
+// =====================================================
+// src/App.jsx — Print Receipt ភ្លាមដោយ Hidden Modal (16 វិច្ឆិកា 2025)
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import './App.css';
 import Header from './components/Header';
 import MenuPanel from './components/MenuPanel';
 import OrderPanel from './components/OrderPanel';
+import ReceiptModal from './components/ReceiptModal';
 import SalesReport from './components/SalesReport';
 import StockManagement from './components/StockManagement';
 import { generateOrderId } from './utils/helpers';
-import { KHR_SYMBOL, formatKHR } from '../utils/formatters';
 
 // Firebase
 import { db, serverTimestamp } from './firebase';
@@ -15,10 +18,6 @@ import { collection, addDoc, getDocs, query, orderBy, doc, updateDoc, writeBatch
 
 const DEFAULT_EXCHANGE_RATE = 4000;
 const SHOP_NAME = "ន កាហ្វេ";
-const SHOP_STATIC_DETAILS = {
-    address: "ផ្ទះលេខ 137, ផ្លូវ 223, កំពង់ចាម",
-    tel: "016 438 555 / 061 91 4444"
-};
 
 function App() {
     const [currentOrder, setCurrentOrder] = useState([]);
@@ -26,6 +25,11 @@ function App() {
         const saved = localStorage.getItem('orderIdCounter');
         return saved ? parseInt(saved, 10) : 1;
     });
+    
+    // State សម្រាប់ Receipt (លាក់ពីអ្នកប្រើប្រាស់)
+    const [receiptData, setReceiptData] = useState({ order: [], orderId: '' });
+    const [triggerPrint, setTriggerPrint] = useState(false);
+    
     const [allOrders, setAllOrders] = useState([]);
     const [isLoadingOrders, setIsLoadingOrders] = useState(true);
     const [view, setView] = useState('pos');
@@ -152,7 +156,7 @@ function App() {
 
     const clearOrder = useCallback(() => setCurrentOrder([]), []);
 
-    // === ចុច "គិតលុយ" → បង្កើត Receipt HTML និងបើក Tab/Window ថ្មី ===
+    // === ចុច "គិតលុយ" → រៀបចំទិន្នន័យ និង Trigger Print ===
     const processPayment = useCallback(async () => {
         if (currentOrder.length === 0) {
             alert('សូមបន្ថែមទំនិញជាមុន!');
@@ -162,224 +166,15 @@ function App() {
         const orderToSave = [...currentOrder];
         const orderIdToShow = currentDisplayOrderId;
         const totalKHR = orderToSave.reduce((sum, i) => sum + i.priceKHR * i.quantity, 0);
-        const now = new Date();
 
-        // បង្កើត Receipt HTML
-        const receiptHTML = `
-<!DOCTYPE html>
-<html lang="km">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>វិក្កយបត្រ #${orderIdToShow}</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'Kantumruy Pro', 'Khmer OS Battambang', sans-serif;
-            background: #f5f5f5;
-            padding: 15px;
-            font-size: 14px;
-            line-height: 1.5;
-        }
-        .receipt {
-            max-width: 400px;
-            margin: 0 auto;
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-        }
-        .header {
-            text-align: center;
-            margin-bottom: 15px;
-            border-bottom: 2px dashed #333;
-            padding-bottom: 15px;
-        }
-        .header h2 {
-            font-size: 20px;
-            margin-bottom: 8px;
-            color: #2c3e50;
-        }
-        .header p {
-            font-size: 12px;
-            color: #666;
-            margin: 3px 0;
-        }
-        .order-id {
-            background: #3498db;
-            color: white;
-            padding: 8px;
-            border-radius: 6px;
-            margin: 10px 0;
-            font-weight: bold;
-            text-align: center;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 15px 0;
-        }
-        th {
-            background: #ecf0f1;
-            padding: 10px 8px;
-            text-align: left;
-            font-weight: bold;
-            font-size: 13px;
-            border-bottom: 2px solid #bdc3c7;
-        }
-        td {
-            padding: 10px 8px;
-            border-bottom: 1px solid #ecf0f1;
-            font-size: 13px;
-        }
-        td:nth-child(2) { text-align: center; }
-        td:last-child { text-align: right; font-weight: 500; }
-        .summary {
-            margin-top: 15px;
-            padding-top: 15px;
-            border-top: 2px dashed #333;
-        }
-        .summary-line {
-            display: flex;
-            justify-content: space-between;
-            margin: 8px 0;
-            font-size: 14px;
-        }
-        .total {
-            font-size: 18px;
-            font-weight: bold;
-            color: #2c3e50;
-            background: #ecf0f1;
-            padding: 12px;
-            border-radius: 8px;
-            margin-top: 10px;
-        }
-        .footer {
-            text-align: center;
-            margin-top: 20px;
-            padding-top: 15px;
-            border-top: 2px dashed #333;
-            font-weight: bold;
-            color: #27ae60;
-            font-size: 14px;
-        }
-        .actions {
-            margin-top: 20px;
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-        button {
-            flex: 1;
-            min-width: 120px;
-            padding: 12px 20px;
-            font-size: 14px;
-            font-weight: bold;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-family: 'Kantumruy Pro', sans-serif;
-            transition: all 0.3s;
-        }
-        .btn-print {
-            background: #3498db;
-            color: white;
-        }
-        .btn-print:active {
-            background: #2980b9;
-            transform: scale(0.98);
-        }
-        .btn-close {
-            background: #95a5a6;
-            color: white;
-        }
-        .btn-close:active {
-            background: #7f8c8d;
-            transform: scale(0.98);
-        }
-        
-        @media print {
-            body { background: white; padding: 0; }
-            .receipt { box-shadow: none; max-width: none; }
-            .actions { display: none !important; }
-            @page { size: 80mm auto; margin: 5mm; }
-        }
-    </style>
-</head>
-<body>
-    <div class="receipt">
-        <div class="header">
-            <h2>${SHOP_NAME}</h2>
-            <p>${SHOP_STATIC_DETAILS.address}</p>
-            <p>ទូរស័ព្ទ: ${SHOP_STATIC_DETAILS.tel}</p>
-            <p>${now.toLocaleDateString('km-KH', { 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
-            })}</p>
-            <p>${now.toLocaleTimeString('km-KH', {
-                hour: '2-digit',
-                minute: '2-digit'
-            })}</p>
-        </div>
+        // រក្សាទុកទិន្នន័យសម្រាប់ Receipt
+        setReceiptData({ 
+            order: orderToSave, 
+            orderId: orderIdToShow 
+        });
 
-        <div class="order-id">វិក្កយបត្រ: ${orderIdToShow}</div>
-
-        <table>
-            <thead>
-                <tr>
-                    <th>មុខទំនិញ</th>
-                    <th>ចំនួន</th>
-                    <th>តម្លៃ</th>
-                </tr>
-            </thead>
-            <tbody>
-                ${orderToSave.map(item => `
-                    <tr>
-                        <td>${item.khmerName}${item.englishName ? `<br><small style="color:#7f8c8d;">${item.englishName}</small>` : ''}</td>
-                        <td>${item.quantity}</td>
-                        <td>${KHR_SYMBOL}${formatKHR(item.priceKHR * item.quantity)}</td>
-                    </tr>
-                `).join('')}
-            </tbody>
-        </table>
-
-        <div class="summary">
-            <div class="summary-line">
-                <span>សរុបរង:</span>
-                <span>${KHR_SYMBOL}${formatKHR(totalKHR)}</span>
-            </div>
-            <div class="summary-line total">
-                <span>សរុបត្រូវបង់:</span>
-                <span>${KHR_SYMBOL}${formatKHR(totalKHR)}</span>
-            </div>
-        </div>
-
-        <div class="footer">
-            សូមអរគុណ! សូមអញ្ជើញមកម្តងទៀត 🙏
-        </div>
-
-        <div class="actions">
-            <button class="btn-print" onclick="window.print()">
-                🖨️ បោះពុម្ភ
-            </button>
-            <button class="btn-close" onclick="window.close()">
-                ✖️ បិទ
-            </button>
-        </div>
-    </div>
-</body>
-</html>`;
-
-        // បើក tab/window ថ្មី
-        const printWindow = window.open('', '_blank');
-        if (!printWindow) {
-            alert('សូមអនុញ្ញាត Pop-up ដើម្បីបង្ហាញវិក្កយបត្រ');
-            return;
-        }
-
-        printWindow.document.write(receiptHTML);
-        printWindow.document.close();
+        // Trigger Print (ReceiptModal នឹង print ភ្លាម)
+        setTriggerPrint(true);
 
         // Save ទៅ Firebase
         try {
@@ -411,9 +206,12 @@ function App() {
             alert("មានបញ្ហារក្សាទុក Order: " + err.message);
         }
 
-        // Clear order
+        // Clear order និង reset trigger
         setCurrentOrder([]);
         setOrderIdCounter(c => c + 1);
+        
+        // Reset trigger បន្ទាប់ពី print រួច
+        setTimeout(() => setTriggerPrint(false), 500);
 
     }, [currentOrder, currentDisplayOrderId, exchangeRate]);
 
@@ -468,8 +266,18 @@ function App() {
                     <StockManagement stockData={stockData} onUpdateStock={updateStockAndSync} />
                 </div>
             )}
+
+            {/* Receipt Modal ដែលលាក់ពីអ្នកប្រើប្រាស់ */}
+            <ReceiptModal
+                order={receiptData.order}
+                orderId={receiptData.orderId}
+                shopName={SHOP_NAME}
+                triggerPrint={triggerPrint}
+            />
         </>
     );
 }
 
 export default App;
+
+
