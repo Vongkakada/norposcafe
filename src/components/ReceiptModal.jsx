@@ -57,8 +57,8 @@ function ReceiptModal({ show, onClose, order, orderId, shopName }) {
             background: white;
             padding: 15px;
             margin: 0 auto;
-            width: 100%;
-            max-width: 100%;
+            width: 80mm;
+            max-width: 80mm;
             box-sizing: border-box;
         }
 
@@ -66,7 +66,7 @@ function ReceiptModal({ show, onClose, order, orderId, shopName }) {
             font-family: 'Courier New', Courier, monospace;
             font-size: 11pt;
             color: #000;
-            width: 80mm;
+            width: 100%;
         }
 
         .receipt-logo-top {
@@ -214,7 +214,7 @@ function ReceiptModal({ show, onClose, order, orderId, shopName }) {
 
         /* Print Styles - Optimized for 80mm Thermal Printer */
         @page {
-            size: 80mm auto;
+            size: 100% auto;
             margin: 0;
         }
 
