@@ -1,4 +1,4 @@
-// src/components/ReceiptModal.jsx - Direct Print Dialog via Invisible Iframe
+// src/components/ReceiptModal.jsx - លាក់ Window + លោត Print Dialog ភ្លាមៗ
 import { useEffect } from 'react';
 import { KHR_SYMBOL, formatKHR } from '../utils/formatters';
 import logo from '../assets/logo.png';
@@ -12,131 +12,110 @@ function ReceiptModal({ order, orderId, shopName = "ន កាហ្វេ", tri
 
     useEffect(() => {
         if (triggerPrint > 0 && order && order.length > 0) {
+            // បើក window លាក់ (គ្មានឃើញសោះ)
+            const printWindow = window.open(
+                '', 
+                '_blank', 
+                'width=100,height=100,left=-1000,top=-1000,toolbar=no,location=no,menubar=no,scrollbars=no,resizable=no'
+            );
 
-            // --- START: ផ្នែកដែលបានកែប្រែ ---
+            if (!printWindow) {
+                alert('សូមអនុញ្ញាត Popup ដើម្បីបោះពុម្ពវិក្កយបត្រ');
+                return;
+            }
 
-            // 1. បង្កើត Iframe មួយ
-            const iframe = document.createElement('iframe');
-            iframe.id = 'receipt-print-frame'; // ដាក់ ID ងាយស្រួលគ្រប់គ្រង
-
-            // 2. លាក់ Iframe នេះពីការបង្ហាញ (សំខាន់បំផុត)
-            iframe.style.position = 'fixed';
-            iframe.style.left = '-9999px'; // រុញវាទៅឆ្វេងสุดៗឲ្យបាត់ពីអេក្រង់
-            iframe.style.width = '0';
-            iframe.style.height = '0';
-            iframe.style.border = 'none';
-
-            // 3. បញ្ចូល Iframe ទៅក្នុងទំព័របច្ចុប្បន្ន
-            document.body.appendChild(iframe);
-
-            const now = new new Date();
+            const now = new Date();
             const totalKHR = order.reduce((sum, item) => sum + (item.priceKHR || 0) * item.quantity, 0);
 
-            // 4. ត្រៀម HTML សម្រាប់វិក្កយបត្រ (កូដ HTML ដូចដើម)
-            const receiptHTML = `
-            <!DOCTYPE html>
-            <html lang="km">
-            <head>
-                <meta charset="UTF-8">
-                <title>វិក្កយបត្រ #${orderId}</title>
-                <link href="https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@400;500;700&display=swap" rel="stylesheet">
-                <style>
-                    /* Style ទាំងអស់នៅរក្សាដដែល... */
-                    * { margin: 0; padding: 0; box-sizing: border-box; }
-                    body { 
-                        font-family: 'Kantumruy Pro', sans-serif; 
-                        margin: 0;
-                        padding: 0;
-                        width: 80mm; /* កំណត់ទំហំក្រដាស Print */
-                    }
-                    .receipt { 
-                        width: 100%; 
-                        padding: 3mm; 
-                    }
-                    img { width: 65px; display: block; margin: 0 auto 10px; }
-                    h3 { text-align: center; font-size: 16px; margin: 5px 0; font-weight: bold; }
-                    p { text-align: center; font-size: 12px; margin: 3px 0; line-height: 1.4; }
-                    .divider { border-top: 1px dashed #000; margin: 8px 0; }
-                    table { width: 100%; border-collapse: collapse; font-size: 12px; }
-                    th, td { padding: 4px 0px; }
-                    th:nth-child(2), td:nth-child(2) { text-align: center; }
-                    th:last-child, td:last-child { text-align: right; }
-                    .total-line { display: flex; justify-content: space-between; font-size: 12px; }
-                    .grand-total { font-weight: bold; font-size: 14px; border-top: 1px solid #000; padding-top: 5px; margin-top: 5px; }
-                    
-                    @page { 
-                        size: 80mm auto; 
-                        margin: 0; 
-                    }
-                    @media print {
-                        body {
-                           -webkit-print-color-adjust: exact;
-                           print-color-adjust: exact;
-                        }
-                    }
-                </style>
-            </head>
-            <body>
-                <div class="receipt">
-                    <img src="${logo}" alt="Logo" onerror="this.style.display='none'">
-                    <h3>${shopName}</h3>
-                    <p>${SHOP_STATIC_DETAILS.address}</p>
-                    <p>ទូរស័ព្ទ: ${SHOP_STATIC_DETAILS.tel}</p>
-                    <p>${now.toLocaleDateString('km-KH')} ${now.toLocaleTimeString('km-KH', {hour:'2-digit', minute:'2-digit'})}</p>
-                    <p><strong>វិក្កយបត្រ #${orderId}</strong></p>
-                    <div class="divider"></div>
-                    <table>
-                        <thead><tr><th style="text-align:left;">មុខទំនិញ</th><th>ចំនួន</th><th>តម្លៃ</th></tr></thead>
-                        <tbody>
-                            ${order.map(item => `
-                                <tr>
-                                    <td>${item.khmerName}</td>
-                                    <td>${item.quantity}</td>
-                                    <td>${KHR_SYMBOL}${formatKHR(item.priceKHR * item.quantity)}</td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                    <div class="divider"></div>
-                    <div class="summary">
-                         <div class="total-line">
-                            <span>សរុបរង:</span>
-                            <span>${KHR_SYMBOL}${formatKHR(totalKHR)}</span>
-                        </div>
-                        <div class="total-line grand-total">
-                            <span>សរុបត្រូវបង់:</span>
-                            <span>${KHR_SYMBOL}${formatKHR(totalKHR)}</span>
-                        </div>
-                    </div>
-                    <p style="margin-top:15px;">សូមអរគុណ! សូមអញ្ជើញមកម្តងទៀត!</p>
-                </div>
-            </body>
-            </html>`;
+            printWindow.document.write(`
+<!DOCTYPE html>
+<html lang="km">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>វិក្កយបត្រ #${orderId}</title>
+    <style>
+        body, html { 
+            margin: 0; padding: 0; background: white; 
+            font-family: 'Khmer', 'Kantumruy Pro', sans-serif;
+        }
+        .receipt { 
+            width: 80mm; 
+            margin: 0 auto; 
+            padding: 8mm 4mm; 
+            box-sizing: border-box;
+        }
+        img { 
+            width: 65px; height: auto; display: block; margin: 0 auto 8px;
+            filter: brightness(0) saturate(100%);
+        }
+        h3 { text-align: center; font-size: 18px; margin: 8px 0; font-weight: bold; }
+        p { text-align: center; font-size: 13px; margin: 4px 0; }
+        .divider { border-top: 2px dashed #000; margin: 12px 0; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; margin: 10px 0; }
+        th, td { padding: 4px 2px; }
+        th:nth-child(2), td:nth-child(2) { text-align: center; }
+        th:last-child, td:last-child { text-align: right; }
+        .total { font-weight: bold; font-size: 16px; border-top: 2px solid #000; padding-top: 8px; margin-top: 8px; }
 
-            // 5. សរសេរ HTML ចូលទៅក្នុង Iframe
-            const doc = iframe.contentDocument || iframe.contentWindow.document;
-            doc.open();
-            doc.write(receiptHTML);
-            doc.close();
+        @page { size: 80mm auto; margin: 0 !important; }
+        @media print {
+            body, html { margin: 0 !important; padding: 0 !100; }
+            .receipt { padding: 5mm 3mm !important; }
+        }
+    </style>
+</head>
+<body>
+    <div class="receipt">
+        <img src="${logo}" alt="Logo" onerror="this.style.display='none'">
+        <h3>${shopName}</h3>
+        <p>${SHOP_STATIC_DETAILS.address}</p>
+        <p>ទូរស័ព្ទ: ${SHOP_STATIC_DETAILS.tel}</p>
+        <p>${now.toLocaleDateString('km-KH')} ${now.toLocaleTimeString('km-KH', {hour:'2-digit', minute:'2-digit'})}</p>
+        <p><strong>វិក្កយបត្រ #${orderId}</strong></p>
+        <div class="divider"></div>
+        <table>
+            <thead><tr><th>មុខទំនិញ</th><th>ចំនួន</th><th>តម្លៃ</th></tr></thead>
+            <tbody>
+                ${order.map(item => `
+                    <tr>
+                        <td>${item.khmerName}${item.englishName ? ` (${item.englishName})` : ''}</td>
+                        <td>${item.quantity}</td>
+                        <td>${KHR_SYMBOL}${formatKHR(item.priceKHR * item.quantity)}</td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+        <div class="divider"></div>
+        <div style="text-align:right; font-size:14px;">
+            <div>សរុបរង: ${KHR_SYMBOL}${formatKHR(totalKHR)}</div>
+            <div class="total">សរុបត្រូវបង់: ${KHR_SYMBOL}${formatKHR(totalKHR)}</div>
+        </div>
+        <div style="text-align:center; margin-top:20px; font-size:14px;">
+            សូមអរគុណ! សូមអញ្ជើញមកម្តងទៀត!
+        </div>
+    </div>
 
-            // 6. ហៅ Print Dialog ហើយបន្ទាប់មកលុប Iframe ចោល
-            iframe.onload = function() {
-                // ធានាថា content បាន load រួចរាល់
-                iframe.contentWindow.focus(); // Focus ទៅ iframe
-                iframe.contentWindow.print(); // បង្ហាញ Print Dialog
-                
-                // ពេល Print Dialog បិទ (Print/Cancel), លុប iframe ចេញពីទំព័រ
-                setTimeout(() => {
-                    document.body.removeChild(iframe);
-                }, 100); 
-            };
-            
-            // --- END: ផ្នែកដែលបានកែប្រែ ---
+    <script>
+        // លោត Print Dialog ភ្លាមៗ + បិទ Window ដោយស្វ័យប្រវត្តិ
+        setTimeout(() => {
+            window.print();
+            // បិទ window ក្រោយ Print (ឬ Cancel)
+            window.onafterprint = () => setTimeout(() => window.close(), 300);
+            window.onfocus = () => setTimeout(() => window.close(), 500); // បើគេ Cancel
+        }, 300);
+    </script>
+</body>
+</html>
+            `);
 
+            printWindow.document.close();
+            printWindow.focus();
+
+            console.log('បោះពុម្ពភ្លាមៗ! Print Dialog បានបើកហើយ');
         }
     }, [triggerPrint, order, orderId, shopName]);
 
-    // Component នេះមិន render អ្វីចេញមកទេ ព្រោះវាគ្រាន់តែគ្រប់គ្រងការ print
     return null;
 }
 
