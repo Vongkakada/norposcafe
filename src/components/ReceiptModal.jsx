@@ -1,4 +1,4 @@
-// src/components/ReceiptModal.jsx - កែតិចតួច ប៉ុន្តែ Print ស្អាត 100% នៅលើទូ
+// src/components/ReceiptModal.jsx - Print Dialog ដូច Desktop នៅ Mobile
 import { useEffect } from 'react';
 import { KHR_SYMBOL, formatKHR } from '../utils/formatters';
 import logo from '../assets/logo.png';
@@ -12,7 +12,7 @@ function ReceiptModal({ order, orderId, shopName = "ន កាហ្វេ", tri
 
     useEffect(() => {
         if (triggerPrint > 0 && order && order.length > 0) {
-            const receiptWindow = window.open('', '_blank', 'width=400,height=800,scrollbars=no');
+            const receiptWindow = window.open('', '_blank', 'width=400,height=800,scrollbars=no,resizable=yes');
 
             if (!receiptWindow) {
                 alert('សូមអនុញ្ញាត Popup ដើម្បីបោះពុម្ពវិក្កយបត្រ');
@@ -31,103 +31,43 @@ function ReceiptModal({ order, orderId, shopName = "ន កាហ្វេ", tri
     <title>វិក្កយបត្រ #${orderId}</title>
     <link href="https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
-        body, html {
-            margin: 0;
-            padding: 0;
-            height: 100%;
-            background: white;
-            font-family: 'Kantumruy Pro', sans-serif;
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body, html { 
+            height: 100%; 
+            background: white; 
+            font-family: 'Kantumruy Pro', sans-serif; 
+            padding: 10px;
         }
-
-        .receipt {
-            width: 80mm;
-            min-height: 100vh;
-            margin: 0 auto;
-            padding: 8mm 4mm;
-            background: white;
-            box-sizing: border-box;
+        .receipt { 
+            width: 80mm; 
+            margin: 0 auto; 
+            background: white; 
+            padding: 10mm 5mm; 
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
         }
-
-        img {
-            display: block;
-            margin: 0 auto 8px;
-            width: 65px;
-            height: auto;
-        }
-
-        h3 {
-            text-align: center;
-            margin: 8px 0;
-            font-size: 18px;
-            font-weight: bold;
-        }
-
-        p {
-            text-align: center;
-            margin: 4px 0;
-            font-size: 13px;
-            line-height: 1.4;
-        }
-
-        .divider {
-            border-top: 2px dashed #000;
-            margin: 10px 0;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 10px 0;
-            font-size: 13px;
-        }
-
-        th, td {
-            padding: 5px 2px;
-            text-align: left;
-        }
-
+        img { width: 65px; height: auto; display: block; margin: 0 auto 10px; }
+        h3 { text-align: center; font-size: 18px; margin: 8px 0; font-weight: bold; }
+        p { text-align: center; font-size: 13px; margin: 4px 0; line-height: 1.4; }
+        .divider { border-top: 2px dashed #000; margin: 12px 0; }
+        table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 13px; }
+        th, td { padding: 5px 2px; }
         th:nth-child(2), td:nth-child(2) { text-align: center; width: 18%; }
         th:last-child, td:last-child { text-align: right; width: 32%; }
+        .total { font-weight: bold; font-size: 16px; border-top: 2px solid #000; padding-top: 8px; margin-top: 8px; }
 
-        .total {
-            font-weight: bold;
-            font-size: 16px;
-            border-top: 2px solid #000;
-            padding-top: 8px;
-            margin-top: 8px;
+        /* សំខាន់បំផុត: Print Dialog ដូច Desktop */
+        @page { 
+            size: 80mm auto; 
+            margin: 0 !important; 
         }
-
-        .footer {
-            text-align: center;
-            margin-top: 20px;
-            font-size: 14px;
-        }
-
-        /* សំខាន់បំផុតសម្រាប់ Mobile */
-        @page {
-            size: 80mm 297mm;   /* ឬ auto ក៏បាន */
-            margin: 0 !important;
-        }
-
         @media print {
-            body, html {
-                margin: 0 !important;
-                padding: 0 !important;
-                background: white !important;
-            }
-
+            body, html { margin: 0 !important; padding: 0 !important; background: white !important; }
+            .receipt { padding: 5mm 3mm !important; margin: 0 !important; width: 100% !important; box-shadow: none !important; }
             .no-print { display: none !important; }
-
-            .receipt {
-                padding: 5mm 3mm !important;
-                margin: 0 !important;
-                width: 100% !important;
-                max-width: none !important;
-            }
         }
     </style>
 </head>
-<body onload="setTimeout(() => window.print(), 800)">
+<body>
     <div class="receipt">
         <img src="${logo}" alt="Logo" onerror="this.style.display='none'">
         <h3>${shopName}</h3>
@@ -135,17 +75,9 @@ function ReceiptModal({ order, orderId, shopName = "ន កាហ្វេ", tri
         <p>ទូរស័ព្ទ: ${SHOP_STATIC_DETAILS.tel}</p>
         <p>${now.toLocaleDateString('km-KH')} ${now.toLocaleTimeString('km-KH', {hour:'2-digit', minute:'2-digit'})}</p>
         <p><strong>វិក្កយបត្រ #${orderId}</strong></p>
-        
         <div class="divider"></div>
-        
         <table>
-            <thead>
-                <tr>
-                    <th>មុខទំនិញ</th>
-                    <th>ចំនួន</th>
-                    <th>តម្លៃ</th>
-                </tr>
-            </thead>
+            <thead><tr><th>មុខទំនិញ</th><th>ចំនួន</th><th>តម្លៃ</th></tr></thead>
             <tbody>
                 ${order.map(item => `
                     <tr>
@@ -156,35 +88,44 @@ function ReceiptModal({ order, orderId, shopName = "ន កាហ្វេ", tri
                 `).join('')}
             </tbody>
         </table>
-        
         <div class="divider"></div>
-        <div style="text-align: right; font-size: 14px;">
+        <div style="text-align:right; font-size:14px;">
             <div>សរុបរង: ${KHR_SYMBOL}${formatKHR(totalKHR)}</div>
             <div class="total">សរុបត្រូវបង់: ${KHR_SYMBOL}${formatKHR(totalKHR)}</div>
         </div>
-        
-        <div class="footer">សូមអរគុណ! សូមអញ្ជើញមកម្តងទៀត!</div>
+        <div style="text-align:center; margin-top:20px; font-size:14px;">
+            សូមអរគុណ! សូមអញ្ជើញមកម្តងទៀត!
+        </div>
     </div>
 
-    <!-- ប៊ូតុងសម្រាប់ Desktop ប៉ុណ្ណោះ -->
-    <div class="no-print" style="position:fixed; bottom:20px; left:50%; transform:translateX(-50%); text-align:center;">
-        <button onclick="window.print()" style="padding:12px 30px; font-size:16px; margin:0 10px;">បោះពុម្ព</button>
-        <button onclick="window.close()" style="padding:12px 30px; font-size:16px; margin:0 10px;">បិទ</button>
+    <!-- ប៊ូតុង Print និង បិទ (ដូច Desktop) -->
+    <div class="no-print" style="position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:white; padding:15px; border-radius:10px; box-shadow:0 4px 12px rgba(0,0,0,0.2);">
+        <button onclick="window.print()" style="padding:12px 30px; font-size:16px; background:#A0522D; color:white; border:none; border-radius:5px; margin:0 8px; cursor:pointer;">
+            បោះពុម្ព
+        </button>
+        <button onclick="window.close()" style="padding:12px 30px; font-size:16px; background:#D2B48C; color:#4A3B31; border:none; border-radius:5px; margin:0 8px; cursor:pointer;">
+            បិទ
+        </button>
     </div>
 
     <script>
-        // Auto print នៅលើទូរស័ព្ទ (បើក 800ms ដើម្បីឲ្យ render ចប់)
-        setTimeout(() => window.print(), 800);
-        
-        // បិទដោយស្វ័យប្រវត្តិក្រោយ Print (សម្រាប់ mobile)
-        window.onafterprint = () => setTimeout(() => window.close(), 600);
+        // ធានាថា Print Dialog បើកភ្លាមៗនៅ mobile
+        window.onload = function() {
+            // មិន auto print ទេ → រង់ចាំអ្នកប្រើចុច
+            // ប៉ុន្តែ focus ទៅ tab ថ្មី
+            window.focus();
+        };
     </script>
 </body>
 </html>
             `);
 
             receiptWindow.document.close();
-            receiptWindow.focus(); // សំខាន់ណាស់នៅ mobile
+
+            // សំខាន់បំផុត: focus ទៅ tab ថ្មី
+            receiptWindow.focus();
+
+            console.log('Receipt window ready! ចុច "បោះពុម្ព" ដើម្បីបើក Print Dialog');
         }
     }, [triggerPrint, order, orderId, shopName]);
 
