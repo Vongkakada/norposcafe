@@ -1,7 +1,4 @@
-// =====================================================
-// 1. App.jsx (Print Receipt ដោយ Hidden Modal)
-// =====================================================
-// src/App.jsx — Print Receipt ភ្លាមដោយ Hidden Modal (16 វិច្ឆិកា 2025)
+// src/App.jsx — Print Receipt ភ្លាមដោយ Hidden Modal (កែប្រែថ្មី)
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import './App.css';
 import Header from './components/Header';
@@ -28,7 +25,7 @@ function App() {
     
     // State សម្រាប់ Receipt (លាក់ពីអ្នកប្រើប្រាស់)
     const [receiptData, setReceiptData] = useState({ order: [], orderId: '' });
-    const [triggerPrint, setTriggerPrint] = useState(false);
+    const [triggerPrint, setTriggerPrint] = useState(0); // ប្រើ counter ជំនួស boolean
     
     const [allOrders, setAllOrders] = useState([]);
     const [isLoadingOrders, setIsLoadingOrders] = useState(true);
@@ -167,16 +164,7 @@ function App() {
         const orderIdToShow = currentDisplayOrderId;
         const totalKHR = orderToSave.reduce((sum, i) => sum + i.priceKHR * i.quantity, 0);
 
-        // រក្សាទុកទិន្នន័យសម្រាប់ Receipt
-        setReceiptData({ 
-            order: orderToSave, 
-            orderId: orderIdToShow 
-        });
-
-        // Trigger Print (ReceiptModal នឹង print ភ្លាម)
-        setTriggerPrint(true);
-
-        // Save ទៅ Firebase
+        // Save ទៅ Firebase ជាមុន
         try {
             const docRef = await addDoc(collection(db, "orders"), {
                 orderIdString: orderIdToShow,
@@ -201,17 +189,23 @@ function App() {
                 date: new Date().toISOString()
             }, ...prev]);
 
+            // រក្សាទុកទិន្នន័យសម្រាប់ Receipt
+            setReceiptData({ 
+                order: orderToSave, 
+                orderId: orderIdToShow 
+            });
+
+            // Trigger Print (ប្រើ counter ដើម្បី trigger useEffect គ្រប់ពេល)
+            setTriggerPrint(prev => prev + 1);
+
+            // Clear order
+            setCurrentOrder([]);
+            setOrderIdCounter(c => c + 1);
+
         } catch (err) {
             console.error(err);
             alert("មានបញ្ហារក្សាទុក Order: " + err.message);
         }
-
-        // Clear order និង reset trigger
-        setCurrentOrder([]);
-        setOrderIdCounter(c => c + 1);
-        
-        // Reset trigger បន្ទាប់ពី print រួច
-        setTimeout(() => setTriggerPrint(false), 500);
 
     }, [currentOrder, currentDisplayOrderId, exchangeRate]);
 
@@ -279,5 +273,3 @@ function App() {
 }
 
 export default App;
-
-

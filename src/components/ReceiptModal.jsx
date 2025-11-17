@@ -1,6 +1,3 @@
-// =====================================================
-// 2. ReceiptModal.jsx (លាក់ពីអេក្រង់ + Auto Print)
-// =====================================================
 // src/components/ReceiptModal.jsx
 import { useEffect, useRef } from 'react';
 import { KHR_SYMBOL, formatKHR } from '../utils/formatters';
@@ -15,11 +12,14 @@ function ReceiptModal({ order, orderId, shopName = "ន កាហ្វេ", tri
     const receiptRef = useRef(null);
 
     useEffect(() => {
-        if (triggerPrint && order && order.length > 0) {
+        // Trigger ពេល triggerPrint > 0 និងមាន order
+        if (triggerPrint > 0 && order && order.length > 0) {
             // រង់ចាំ DOM render រួច ទើប print
-            setTimeout(() => {
+            const timer = setTimeout(() => {
                 window.print();
-            }, 100);
+            }, 300);
+            
+            return () => clearTimeout(timer);
         }
     }, [triggerPrint, order]);
 
@@ -31,11 +31,11 @@ function ReceiptModal({ order, orderId, shopName = "ន កាហ្វេ", tri
     return (
         <div ref={receiptRef} className="receipt-hidden-container">
             <div className="receipt-print-only">
-                <div className="logo">
-                    <img src={logo} alt="Logo" onError={(e) => e.target.style.display = 'none'} />
+                <div className="receipt-logo-top">
+                    <img src={logo} alt="Logo" className="receipt-logo" onError={(e) => e.target.style.display = 'none'} />
                 </div>
                 
-                <div className="header">
+                <div className="receipt-header">
                     <h3>{shopName}</h3>
                     <p>{SHOP_STATIC_DETAILS.address}</p>
                     <p>ទូរស័ព្ទ: {SHOP_STATIC_DETAILS.tel}</p>
@@ -43,14 +43,14 @@ function ReceiptModal({ order, orderId, shopName = "ន កាហ្វេ", tri
                     <p><strong>វិក្កយបត្រ: {orderId}</strong></p>
                 </div>
 
-                <div className="divider"></div>
+                <div className="receipt-divider"></div>
 
-                <table>
+                <table className="receipt-items-table">
                     <thead>
                         <tr>
                             <th>មុខទំនិញ</th>
                             <th>ចំនួន</th>
-                            <th>តម្លៃ</th>
+                            <th>តម្លៃ ({KHR_SYMBOL})</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -67,21 +67,22 @@ function ReceiptModal({ order, orderId, shopName = "ន កាហ្វេ", tri
                     </tbody>
                 </table>
 
-                <div className="divider"></div>
+                <div className="receipt-divider"></div>
 
-                <div className="summary">
-                    <div className="summary-line">
+                <div className="receipt-summary">
+                    <div className="receipt-summary-line">
                         <span>សរុបរង:</span>
                         <span>{KHR_SYMBOL}{formatKHR(totalKHR)}</span>
                     </div>
-                    <div className="summary-line total">
+                    <div className="receipt-divider"></div>
+                    <div className="receipt-summary-line total">
                         <span>សរុបត្រូវបង់:</span>
                         <span>{KHR_SYMBOL}{formatKHR(totalKHR)}</span>
                     </div>
                 </div>
 
-                <div className="footer">
-                    សូមអរគុណ! សូមអញ្ជើញមកម្តងទៀត
+                <div className="receipt-footer">
+                    <p>សូមអរគុណ! សូមអញ្ជើញមកម្តងទៀត!</p>
                 </div>
             </div>
         </div>
