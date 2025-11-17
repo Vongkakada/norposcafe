@@ -11,18 +11,36 @@ const SHOP_STATIC_DETAILS = {
 function ReceiptModal({ order, orderId, shopName = "ន កាហ្វេ", triggerPrint }) {
 
     useEffect(() => {
+        console.log('📄 [ReceiptModal] useEffect triggered:', {
+            triggerPrint,
+            hasOrder: order && order.length > 0,
+            orderLength: order?.length,
+            orderId
+        });
+
         // Trigger ពេល triggerPrint > 0 និងមាន order
         if (triggerPrint > 0 && order && order.length > 0) {
+            console.log('🖨️ [ReceiptModal] Opening print window...');
+            
             // បើក receipt ក្នុង window/tab ថ្មី
             const receiptWindow = window.open('', '_blank', 'width=400,height=700');
             
             if (!receiptWindow) {
+                console.error('❌ [ReceiptModal] Failed to open window - popup blocked!');
                 alert('សូមអនុញ្ញាត popup សម្រាប់ print receipt');
                 return;
             }
 
+            console.log('✅ [ReceiptModal] Window opened successfully');
+
             const now = new Date();
             const totalKHR = order.reduce((sum, item) => sum + (item.priceKHR || 0) * item.quantity, 0);
+
+            console.log('📊 [ReceiptModal] Receipt details:', {
+                now,
+                totalKHR,
+                itemCount: order.length
+            });
 
             // សរសេរ HTML ទៅក្នុង window ថ្មី
             receiptWindow.document.write(`
@@ -320,6 +338,13 @@ function ReceiptModal({ order, orderId, shopName = "ន កាហ្វេ", tri
             `);
 
             receiptWindow.document.close();
+            
+            console.log('🎉 [ReceiptModal] Receipt window ready!');
+        } else {
+            console.log('⏸️ [ReceiptModal] Not printing - conditions not met:', {
+                triggerPrint,
+                hasOrder: order && order.length > 0
+            });
         }
     }, [triggerPrint, order, orderId, shopName]);
 
