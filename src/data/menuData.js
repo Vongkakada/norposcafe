@@ -9,8 +9,8 @@ export const menuData = [
     { khmerName: "កាហ្វេគ្រីម",  priceKHR: 5500, category: "COLD DRINKS", icon: "🥤" },
     { khmerName: "កាហ្វេខ្លិនខារ៉ាមែល",  priceKHR: 5500, category: "COLD DRINKS", icon: "🥤" },
     { khmerName: "កាហ្វេសុកូឡា",  priceKHR: 5500, category: "COLD DRINKS", icon: "🥤" },
-    { khmerName: "កាហ្វេម៉ាឆាបៃតង",  priceKHR: 5500, category: "COLD DRINKS", icon: "🥤" },
-    { khmerName: "សូកូឡា",  priceKHR: 7500, category: "COLD DRINKS", icon: "🥤" },
+    { khmerName: "ម៉ាត់ឆា",  priceKHR: 7500, category: "COLD DRINKS", icon: "🥤" },
+    { khmerName: "ផាសិនសូដា",  priceKHR: 5500, category: "COLD DRINKS", icon: "🥤" },
     { khmerName: "តែបៃតង",  priceKHR: 5500, category: "COLD DRINKS", icon: "🥤" },
     { khmerName: "កាហ្វេឡាតេកូនកាត់", priceKHR: 5500, category: "COLD DRINKS", icon: "🥤" },
 
@@ -46,6 +46,11 @@ export const menuData = [
     { khmerName: "បារី ESSE", priceKHR: 5500, category: "SMOKES", icon: "🧧" },
     { khmerName: "បារី MEVIUS", priceKHR: 8000, category: "SMOKES", icon: "🧧" },
     { khmerName: "បារី WINSTON", priceKHR: 3500, category: "SMOKES", icon: "🧧" },
+    { khmerName: "បារី ESSE កន្លះ", priceKHR: 3000, category: "SMOKES", icon: "🧧" },
+    { khmerName: "បារី MEVIUS កន្លះ", priceKHR: 4000, category: "SMOKES", icon: "🧧" },
+    { khmerName: "បារី MEVIUS 2000៛", priceKHR: 5500, category: "SMOKES", icon: "🧧" },
+    { khmerName: "បារី ESSE 2000៛", priceKHR: 8000, category: "SMOKES", icon: "🧧" },
+    { khmerName: "បារី MEVIUS 1000៛", priceKHR: 3500, category: "SMOKES", icon: "🧧" },
     
 
  ];
