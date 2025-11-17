@@ -1,8 +1,3 @@
-
-
-// =====================================================
-// 4. OrderPanel.jsx (គ្មានការកែប្រែ)
-// =====================================================
 // src/components/OrderPanel.jsx
 import React from 'react';
 import OrderItemEntry from './OrderItemEntry';

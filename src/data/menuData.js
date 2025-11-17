@@ -40,4 +40,12 @@ export const menuData = [
     { khmerName: "តែបៃតងក្រឡុក", priceKHR: 6500, category: "FRAPPE DRINKS", icon: "🍦" },
     { khmerName: "ផាសិនក្រឡុក", priceKHR: 6500, category: "FRAPPE DRINKS", icon: "🍦" },
     { khmerName: "ហេស៊េណាត់ក្រឡុក", priceKHR: 6500, category: "FRAPPE DRINKS", icon: "🍦" },
+
+    //smokes
+        // FRAPPE DRINKS
+    { khmerName: "បារី ESSE", priceKHR: 5500, category: "SMOKES", icon: "🧧" },
+    { khmerName: "បារី MEVIUS", priceKHR: 8000, category: "SMOKES", icon: "🧧" },
+    { khmerName: "បារី WINSTON", priceKHR: 3500, category: "SMOKES", icon: "🧧" },
+    
+
  ];
