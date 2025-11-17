@@ -1,5 +1,5 @@
 // src/components/ReceiptModal.jsx
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { KHR_SYMBOL, formatKHR } from '../utils/formatters';
 import logo from '../assets/logo.png';
 
@@ -9,7 +9,6 @@ const SHOP_STATIC_DETAILS = {
 };
 
 function ReceiptModal({ order, orderId, shopName = "ន កាហ្វេ", triggerPrint }) {
-    const receiptRef = useRef(null);
 
     useEffect(() => {
         // Trigger ពេល triggerPrint > 0 និងមាន order
@@ -29,17 +28,25 @@ function ReceiptModal({ order, orderId, shopName = "ន កាហ្វេ", tri
     const totalKHR = order.reduce((sum, item) => sum + (item.priceKHR || 0) * item.quantity, 0);
 
     return (
-        <div ref={receiptRef} className="receipt-hidden-container">
+        <div className="receipt-hidden-container">
             <div className="receipt-print-only">
                 <div className="receipt-logo-top">
-                    <img src={logo} alt="Logo" className="receipt-logo" onError={(e) => e.target.style.display = 'none'} />
+                    <img 
+                        src={logo} 
+                        alt="Logo" 
+                        className="receipt-logo" 
+                        onError={(e) => e.target.style.display = 'none'} 
+                    />
                 </div>
                 
                 <div className="receipt-header">
                     <h3>{shopName}</h3>
                     <p>{SHOP_STATIC_DETAILS.address}</p>
                     <p>ទូរស័ព្ទ: {SHOP_STATIC_DETAILS.tel}</p>
-                    <p>{now.toLocaleDateString('km-KH')} {now.toLocaleTimeString('km-KH', {hour:'2-digit', minute:'2-digit'})}</p>
+                    <p>
+                        {now.toLocaleDateString('km-KH')} {' '}
+                        {now.toLocaleTimeString('km-KH', {hour:'2-digit', minute:'2-digit'})}
+                    </p>
                     <p><strong>វិក្កយបត្រ: {orderId}</strong></p>
                 </div>
 
