@@ -99,6 +99,12 @@ function ReceiptModal({ order, orderId, shopName = "ន កាហ្វេ", tri
             <div>សរុបរង: ${KHR_SYMBOL}${formatKHR(totalKHR)}</div>
             <div class="total">សរុបត្រូវបង់: ${KHR_SYMBOL}${formatKHR(totalKHR)}</div>
         </div>
+        <div className="receipt-qr-code">
+                        <p style={{fontSize:'0.8em', marginBottom:'5px', fontFamily: 'var(--font-family)'}}>
+                            សូមស្កេនដើម្បីទូទាត់
+                        </p>
+                        <img src={qrCodeUrl} alt="QR Code" />
+        </div>
         <div style="text-align:center; margin-top:20px; font-size:14px;">
             សូមអរគុណ! សូមអញ្ជើញមកម្តងទៀត!
         </div>
