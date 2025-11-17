@@ -1165,159 +1165,75 @@ body {
     margin: 0;
 }
 
-/* ==================== RECEIPT HIDDEN PRINT STYLES ==================== */
-/* លាក់ receipt នៅលើ screen - user មិនឃើញទេ */
-.receipt-hidden-container {
-    display: none;
-}
-
-/* បង្ហាញតែពេល print */
 @media print {
-    /* លាក់អ្វីៗទាំងអស់ លើកតែ receipt */
+    html, body {
+        width: 80mm !important;     /* ឬ 58mm បើម៉ាស៊ីនអ្នកជា 58mm */
+        margin: 0 !important;
+        padding: 0 !important;
+        background: white !important;
+        font-family: 'Courier New', Courier, monospace !important;
+        font-size: 10pt !important;
+        color: black !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    /* លាក់អ្វីៗទាំងអស់ */
     body * {
         visibility: hidden !important;
     }
 
-    .receipt-hidden-container,
-    .receipt-hidden-container * {
+    /* បង្ហាញតែ receipt */
+    .receipt-print-area,
+    .receipt-print-area * {
         visibility: visible !important;
     }
 
-    .receipt-hidden-container {
-        display: block !important;
+    .receipt-print-area {
         position: absolute !important;
         left: 0 !important;
         top: 0 !important;
+        width: 80mm !important;     /* ឬ 58mm */
+        margin: 0 !important;
+        padding: 5mm !important;    /* បន្ថែម padding បន្តិចឲ្យស្អាត */
+        box-sizing: border-box !important;
+        background: white !important;
+        color: black !important;
     }
 
-    /* កំណត់ទំហំ page សម្រាប់ thermal printer */
-    @page {
-        size: 80mm auto;
-        margin: 0;
-    }
-
-    html, body {
-        width: 80mm;
-        margin: 0;
-        padding: 0;
-        background: white;
-    }
-
-    /* Receipt styling */
-    .receipt-print-only {
-        width: 80mm;
-        padding: 3mm;
-        box-sizing: border-box;
-        font-family: 'Courier New', Courier, monospace;
-        font-size: 12pt;
-        color: #000;
-    }
-
-    .receipt-logo-top {
-        text-align: center;
-        margin-bottom: 10px;
-    }
-
-    .receipt-logo {
-        width: 65px;
-        height: auto;
-        max-height: 65px;
-    }
-
-    .receipt-header {
-        text-align: center;
-        margin-bottom: 12px;
-    }
-
-    .receipt-header h3 {
-        margin: 6px 0;
-        font-family: 'Kantumruy Pro', sans-serif;
-        font-size: 1.4em;
-        font-weight: bold;
-        color: #000;
-    }
-
-    .receipt-header p {
-        margin: 2px 0;
-        font-size: 0.95em;
-        line-height: 1.4;
-    }
-
-    .receipt-divider {
-        border-top: 2px dashed #333;
-        margin: 8px 0;
-    }
-
-    .receipt-items-table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-bottom: 10px;
-        font-size: 1em;
-    }
-
-    .receipt-items-table th,
-    .receipt-items-table td {
-        text-align: left;
-        padding: 4px 2px;
-        border-bottom: 1px dotted #888;
-    }
-
-    .receipt-items-table th:nth-child(2),
-    .receipt-items-table td:nth-child(2) {
-        text-align: center;
-        width: 15%;
-    }
-
-    .receipt-items-table th:last-child,
-    .receipt-items-table td:last-child {
-        text-align: right;
-        width: 30%;
-    }
-
-    .receipt-items-table tr:last-child td {
-        border-bottom: none;
-    }
-
-    .receipt-summary {
-        margin-top: 10px;
-    }
-
-    .receipt-summary-line {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 5px;
-        font-size: 1em;
-    }
-
-    .receipt-summary-line.total {
-        font-weight: bold;
-        font-size: 1.25em;
-        margin-top: 8px;
-        padding-top: 8px;
-    }
-
-    .receipt-footer {
-        text-align: center;
-        font-size: 0.95em;
-        margin-top: 12px;
-        font-weight: 500;
-    }
-
-    .receipt-footer p {
-        margin: 5px 0;
-    }
-
-    /* លាក់ UI elements ផ្សេងៗពេល print */
+    /* លាក់ UI ទាំងអស់ */
+    .modal,
+    .modal-content,
+    .print-button-container,
+    .close-button,
+    .btn-print,
+    .btn-close-receipt,
     .app-navigation,
+    .pos-container,
     .menu-panel,
     .order-panel,
-    .pos-container,
-    .category-tabs,
     .action-buttons,
-    .report-view-container,
+    .category-tabs,
     .sales-report-panel,
     .stock-management-panel {
         display: none !important;
-        visibility: hidden !important;
+    }
+
+    /* កែទំហំ logo និង QR */
+    .receipt-logo {
+        width: 20mm !important;
+        height: auto !important;
+        max-height: 40mm !important;
+    }
+
+    .receipt-qr-code img {
+        width: 60px !important;
+        height: 60px !important;
+    }
+
+    /* កុំឲ្យកាត់ទំព័រ */
+    .receipt-print-area {
+        page-break-after: always !important;
     }
 }
+/* Print-specific styles */
