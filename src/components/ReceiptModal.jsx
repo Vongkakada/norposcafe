@@ -106,12 +106,13 @@ function ReceiptModal({ order, orderId, shopName = "ន កាហ្វេ", tri
 
     <!-- ប៊ូតុង Print និង បិទ (ដូច Desktop) -->
     <div class="no-print" style="position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:white; padding:15px; border-radius:10px; box-shadow:0 4px 12px rgba(0,0,0,0.2);">
+        <button onclick="window.close()" style="padding:12px 30px; font-size:16px; background:#D2B48C; color:#4A3B31; border:none; border-radius:5px; margin:0 8px; cursor:pointer;">
+            បិទ
+        </button>    
         <button onclick="window.print()" style="padding:12px 30px; font-size:16px; background:#A0522D; color:white; border:none; border-radius:5px; margin:0 8px; cursor:pointer;">
             បោះពុម្ព
         </button>
-        <button onclick="window.close()" style="padding:12px 30px; font-size:16px; background:#D2B48C; color:#4A3B31; border:none; border-radius:5px; margin:0 8px; cursor:pointer;">
-            បិទ
-        </button>
+
     </div>
 
     <script>
