@@ -41,6 +41,7 @@ export const menuData = [
     { khmerName: "ផាសិនក្រឡុក", priceKHR: 6500, category: "FRAPPE DRINKS", icon: "🍦" },
     { khmerName: "ហេស៊េណាត់ក្រឡុក", priceKHR: 6500, category: "FRAPPE DRINKS", icon: "🍦" },
 
+
     //smokes
         // FRAPPE DRINKS
     { khmerName: "បារី ESSE", priceKHR: 5500, category: "SMOKES", icon: "🧧" },
@@ -52,5 +53,9 @@ export const menuData = [
     { khmerName: "បារី ESSE 2000៛", priceKHR: 8000, category: "SMOKES", icon: "🧧" },
     { khmerName: "បារី MEVIUS 1000៛", priceKHR: 3500, category: "SMOKES", icon: "🧧" },
     
+    //BORA
+    { khmerName: "កាហ្វេដូងគ្រីម", priceKHR: 7200, category: "BORA", icon: "❌" },
+    { khmerName: "សូកូដូងគ្រីម", priceKHR: 7200, category: "BORA", icon: "❌" },
+    { khmerName: "ម៉ាត់ឆាដូងគ្រីម", priceKHR: 7200, category: "BORA", icon: "❌" },
 
  ];
