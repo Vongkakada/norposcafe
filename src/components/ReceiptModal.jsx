@@ -2,6 +2,7 @@
 import { useEffect } from 'react';
 import { KHR_SYMBOL, formatKHR } from '../utils/formatters';
 import logo from '../assets/logo.png';
+import qrcode from "../assets/qrcode.jpg";
 
 const SHOP_STATIC_DETAILS = {
     address: "ផ្ទះលេខ 137, ផ្លូវ 223, កំពង់ចាម",
@@ -103,7 +104,7 @@ function ReceiptModal({ order, orderId, shopName = "ន កាហ្វេ", tri
                         <p style={{fontSize:'0.8em', marginBottom:'5px', fontFamily: 'var(--font-family)'}}>
                             សូមស្កេនដើម្បីទូទាត់
                         </p>
-                        <img src={qrCodeUrl} alt="QR Code" />
+                        <img src={qrCode} alt="QR Code" />
         </div>
         <div style="text-align:center; margin-top:20px; font-size:14px;">
             សូមអរគុណ! សូមអញ្ជើញមកម្តងទៀត!
