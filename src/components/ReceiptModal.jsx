@@ -1,4 +1,4 @@
-// src/components/ReceiptModal.jsx - Print Dialog ដូច Desktop នៅ Mobile
+// src/components/ReceiptModal.jsx - Print Dialog ដូច Desktop នៅ Mobile + បន្ថែមតម្លៃដុល្លារ
 import { useEffect } from 'react';
 import { KHR_SYMBOL, formatKHR } from '../utils/formatters';
 import logo from '../assets/logo.png';
@@ -8,6 +8,9 @@ const SHOP_STATIC_DETAILS = {
     address: "ផ្ទះលេខ 137, ផ្លូវ 223, កំពង់ចាម",
     tel: "016 438 555 / 061 91 4444"
 };
+
+const EXCHANGE_RATE = 4000; // 1$ = 4000៛
+const formatUSD = (khr) => (khr / EXCHANGE_RATE).toFixed(2);
 
 function ReceiptModal({ order, orderId, shopName = "ន កាហ្វេ", triggerPrint }) {
 
@@ -22,6 +25,7 @@ function ReceiptModal({ order, orderId, shopName = "ន កាហ្វេ", tri
 
             const now = new Date();
             const totalKHR = order.reduce((sum, item) => sum + (item.priceKHR || 0) * item.quantity, 0);
+            const totalUSD = formatUSD(totalKHR);
 
             receiptWindow.document.write(`
 <!DOCTYPE html>
@@ -90,15 +94,26 @@ function ReceiptModal({ order, orderId, shopName = "ន កាហ្វេ", tri
                     <tr>
                         <td>${item.khmerName}${item.englishName ? ` (${item.englishName})` : ''}</td>
                         <td>${item.quantity}</td>
-                        <td>${KHR_SYMBOL}${formatKHR(item.priceKHR * item.quantity)}</td>
+                        <td>
+                            ${KHR_SYMBOL}${formatKHR(item.priceKHR * item.quantity)}<br>
+                            <span style="font-size:11px; color:#666;">$${formatUSD(item.priceKHR * item.quantity)}</span>
+                        </td>
                     </tr>
                 `).join('')}
             </tbody>
         </table>
         <div class="divider"></div>
         <div style="text-align:right; font-size:14px;">
-            <div>សរុបរង: ${KHR_SYMBOL}${formatKHR(totalKHR)}</div>
-            <div class="total">សរុបត្រូវបង់: ${KHR_SYMBOL}${formatKHR(totalKHR)}</div>
+            <div>
+                សរុបរង: ${KHR_SYMBOL}${formatKHR(totalKHR)} 
+                <span style="font-size:12px; color:#666;">($${totalUSD})</span>
+            </div>
+            <div class="total">
+                សរុបត្រូវបង់: ${KHR_SYMBOL}${formatKHR(totalKHR)}
+                <div style="font-size:14px; color:#555; margin-top:5px;">
+                    💵 $${totalUSD} USD
+                </div>
+            </div>
         </div>
         <div class="receipt-qr-code" style="text-align:center; margin-top:20px; padding:10px;">
             <p style="font-size:13px; margin-bottom:8px; font-weight:500;">
