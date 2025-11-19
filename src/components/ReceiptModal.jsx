@@ -88,12 +88,20 @@ function ReceiptModal({ order, orderId, shopName = "ន កាហ្វេ", tri
         <p><strong>វិក្កយបត្រ #${orderId}</strong></p>
         <div class="divider"></div>
         <table>
-            <thead><tr><th>មុខទំនិញ</th><th>ចំនួន</th><th>តម្លៃ</th></tr></thead>
+            <thead>
+                <tr>
+                    <th>មុខទំនិញ<br><span style="font-size:10px; font-weight:400; color:#666;">Item</span></th>
+                    <th>ចំនួន<br><span style="font-size:10px; font-weight:400; color:#666;">Qty</span></th>
+                    <th>តម្លៃរាយ<br><span style="font-size:10px; font-weight:400; color:#666;">Price</span></th>
+                    <th>សរុបរង<br><span style="font-size:10px; font-weight:400; color:#666;">Subtotal</span></th>
+                </tr>
+            </thead>
             <tbody>
                 ${order.map(item => `
                     <tr>
                         <td>${item.khmerName}${item.englishName ? ` (${item.englishName})` : ''}</td>
                         <td>${item.quantity}</td>
+                        <td>${KHR_SYMBOL}${formatKHR(item.priceKHR)}</td>
                         <td>
                             ${KHR_SYMBOL}${formatKHR(item.priceKHR * item.quantity)}<br>
                             <span style="font-size:11px; color:#666;">$${formatUSD(item.priceKHR * item.quantity)}</span>
@@ -109,9 +117,9 @@ function ReceiptModal({ order, orderId, shopName = "ន កាហ្វេ", tri
                 <span style="font-size:12px; color:#666;">($${totalUSD})</span>
             </div>
             <div class="total">
-                សរុបត្រូវបង់: ${KHR_SYMBOL}${formatKHR(totalKHR)}
+                សរុបរួម: ${KHR_SYMBOL}${formatKHR(totalKHR)}
                 <div style="font-size:14px; color:#555; margin-top:5px;">
-                    💵 $${totalUSD} USD
+                    Grand Total $${totalUSD} USD
                 </div>
             </div>
         </div>

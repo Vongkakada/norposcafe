@@ -49,9 +49,9 @@ export const menuData = [
     { khmerName: "បារី WINSTON", priceKHR: 3500, category: "SMOKES", icon: "🧧" },
     { khmerName: "បារី ESSE កន្លះ", priceKHR: 3000, category: "SMOKES", icon: "🧧" },
     { khmerName: "បារី MEVIUS កន្លះ", priceKHR: 4000, category: "SMOKES", icon: "🧧" },
-    { khmerName: "បារី MEVIUS 2000៛", priceKHR: 5500, category: "SMOKES", icon: "🧧" },
-    { khmerName: "បារី ESSE 2000៛", priceKHR: 8000, category: "SMOKES", icon: "🧧" },
-    { khmerName: "បារី MEVIUS 1000៛", priceKHR: 3500, category: "SMOKES", icon: "🧧" },
+    { khmerName: "បារី MEVIUS 2000៛", priceKHR: 2000, category: "SMOKES", icon: "🧧" },
+    { khmerName: "បារី ESSE 2000៛", priceKHR: 2000, category: "SMOKES", icon: "🧧" },
+    { khmerName: "បារី MEVIUS 1000៛", priceKHR: 1000, category: "SMOKES", icon: "🧧" },
     
     //BORA
     { khmerName: "កាហ្វេដូងគ្រីម", priceKHR: 7200, category: "BORA", icon: "❌" },
