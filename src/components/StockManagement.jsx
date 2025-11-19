@@ -7,77 +7,70 @@ function StockManagement({ stockData, onUpdateStock, transactions = [], onAddTra
     const [showTransactionForm, setShowTransactionForm] = useState(false);
     const [showHistory, setShowHistory] = useState(false);
     const [showDailyReport, setShowDailyReport] = useState(false);
-    const [selectedItem, setSelectedItem] = useState(null);
     
-    // State for Calendar in report
+    // State សម្រាប់ Calendar ក្នុងរបាយការណ៍
     const [reportDate, setReportDate] = useState(new Date().toISOString().split('T')[0]);
 
     const [transactionType, setTransactionType] = useState('IN');
+    const [selectedItem, setSelectedItem] = useState(null);
     const [transactionData, setTransactionData] = useState({
         quantity: 0,
+        pricePerUnit: 0,
         note: ''
     });
     const [newStockItem, setNewStockItem] = useState({
         khmerName: '',
         category: 'COLD DRINKS',
+        priceKHR: 0,
         quantity: 0,
         minStockAlert: 5
     });
 
-    // Calculate statistics for selected item and date
-    const getStatsForSelectedItem = useMemo(() => {
-        if (!selectedItem) return null;
-
-        const key = `${selectedItem.khmerName}_${selectedItem.category}`;
-        
-        // For selected date
-        const selectedDateTransactions = transactions.filter(txn => 
-            txn.createdAt && txn.createdAt.startsWith(reportDate) && txn.itemKey === key
+    // ការគណនាស្ថិតិសម្រាប់ថ្ងៃដែលបានជ្រើសរើស (មិនមែនតែថ្ងៃនេះទៀតទេ)
+    const getStatsForDate = useMemo(() => {
+        const selectedTransactions = transactions.filter(txn => 
+            txn.createdAt && txn.createdAt.startsWith(reportDate)
         );
 
-        const stockIn = selectedDateTransactions
+        const stockIn = selectedTransactions
             .filter(t => t.type === 'IN')
             .reduce((sum, t) => sum + t.quantity, 0);
 
-        const stockOut = selectedDateTransactions
+        const stockOut = selectedTransactions
             .filter(t => t.type === 'OUT')
             .reduce((sum, t) => sum + t.quantity, 0);
+        
+        // យើងនៅតែគណនា revenue និង expense ទុក ក្រែងត្រូវការប្រើនៅកន្លែងផ្សេង
+        // ប៉ុន្តែយើងនឹងមិនបង្ហាញវានៅក្នុង Report Panel ទេ
+        const revenue = selectedTransactions
+            .filter(t => t.type === 'OUT')
+            .reduce((sum, t) => sum + t.totalAmount, 0);
 
-        // For today
+        const expense = selectedTransactions
+            .filter(t => t.type === 'IN')
+            .reduce((sum, t) => sum + t.totalAmount, 0);
+
+        return { stockIn, stockOut, revenue, expense, reportDateTransactions: selectedTransactions };
+    }, [transactions, reportDate]); // បន្ថែម reportDate ជា dependency
+
+    // គណនាស្ថិតិសម្រាប់ថ្ងៃនេះ (សម្រាប់តែ Summary Cards ខាងលើ)
+    const getTodayStats = useMemo(() => {
         const today = new Date().toISOString().split('T')[0];
         const todayTransactions = transactions.filter(txn => 
-            txn.createdAt && txn.createdAt.startsWith(today) && txn.itemKey === key
+            txn.createdAt && txn.createdAt.startsWith(today)
         );
-
-        const todayIn = todayTransactions
+        const stockIn = todayTransactions
             .filter(t => t.type === 'IN')
             .reduce((sum, t) => sum + t.quantity, 0);
 
-        const todayOut = todayTransactions
+        const stockOut = todayTransactions
             .filter(t => t.type === 'OUT')
             .reduce((sum, t) => sum + t.quantity, 0);
+        return { stockIn, stockOut };
+    }, [transactions]);
 
-        // All time for this item
-        const allTimeTransactions = transactions.filter(txn => txn.itemKey === key);
-        const allTimeIn = allTimeTransactions
-            .filter(t => t.type === 'IN')
-            .reduce((sum, t) => sum + t.quantity, 0);
-        const allTimeOut = allTimeTransactions
-            .filter(t => t.type === 'OUT')
-            .reduce((sum, t) => sum + t.quantity, 0);
 
-        return { 
-            stockIn, 
-            stockOut,
-            todayIn,
-            todayOut,
-            allTimeIn,
-            allTimeOut,
-            selectedDateTransactions 
-        };
-    }, [selectedItem, transactions, reportDate]);
-
-    // Calculate total stock quantity
+    // គណនាចំនួនទំនិញសរុបក្នុងស្តុក
     const totalStockQuantity = useMemo(() => {
         return Object.values(stockData).reduce((sum, item) => sum + item.quantity, 0);
     }, [stockData]);
@@ -126,6 +119,7 @@ function StockManagement({ stockData, onUpdateStock, transactions = [], onAddTra
 
             return {
                 'ឈ្មោះទំនិញ': item.khmerName,
+                'តម្លៃ (KHR)': item.priceKHR,
                 'ទិញចូលថ្ងៃនេះ': todayIn,
                 'លក់ចេញថ្ងៃនេះ': todayOut,
                 'សល់ក្នុងស្តុក': item.quantity,
@@ -137,7 +131,7 @@ function StockManagement({ stockData, onUpdateStock, transactions = [], onAddTra
         const worksheet = XLSX.utils.json_to_sheet(excelData);
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, 'Stock');
-        worksheet['!cols'] = [{ wch: 20 }, { wch: 15 }, { wch: 15 }, { wch: 12 }, { wch: 15 }, { wch: 20 }];
+        worksheet['!cols'] = [{ wch: 20 }, { wch: 12 }, { wch: 15 }, { wch: 15 }, { wch: 12 }, { wch: 15 }, { wch: 20 }];
         XLSX.writeFile(workbook, `stock_${new Date().toISOString().split('T')[0]}.xlsx`);
     };
 
@@ -165,6 +159,8 @@ function StockManagement({ stockData, onUpdateStock, transactions = [], onAddTra
                 itemName: newStockItem.khmerName,
                 type: 'IN',
                 quantity: newStockItem.quantity,
+                pricePerUnit: newStockItem.priceKHR,
+                totalAmount: newStockItem.quantity * newStockItem.priceKHR,
                 note: 'បន្ថែមទំនិញថ្មី - ស្តុកដំបូង',
                 createdAt: new Date().toISOString()
             };
@@ -174,6 +170,7 @@ function StockManagement({ stockData, onUpdateStock, transactions = [], onAddTra
         setNewStockItem({
             khmerName: '',
             category: 'COLD DRINKS',
+            priceKHR: 0,
             quantity: 0,
             minStockAlert: 5
         });
@@ -186,6 +183,7 @@ function StockManagement({ stockData, onUpdateStock, transactions = [], onAddTra
         setTransactionType(type);
         setTransactionData({
             quantity: 0,
+            pricePerUnit: item.priceKHR,
             note: ''
         });
         setShowTransactionForm(true);
@@ -227,6 +225,8 @@ function StockManagement({ stockData, onUpdateStock, transactions = [], onAddTra
                 itemName: selectedItem.khmerName,
                 type: transactionType,
                 quantity: transactionData.quantity,
+                pricePerUnit: transactionData.pricePerUnit,
+                totalAmount: transactionData.quantity * transactionData.pricePerUnit,
                 note: transactionData.note,
                 previousStock: selectedItem.quantity,
                 newStock: newQuantity,
@@ -236,6 +236,7 @@ function StockManagement({ stockData, onUpdateStock, transactions = [], onAddTra
         }
 
         setShowTransactionForm(false);
+        setSelectedItem(null);
         alert(transactionType === 'IN' ? 'ទិញចូលបានជោគជ័យ!' : 'លក់ចេញបានជោគជ័យ!');
     };
 
@@ -247,19 +248,14 @@ function StockManagement({ stockData, onUpdateStock, transactions = [], onAddTra
         alert('ទំនិញបានលុបចេញ!');
     };
 
-    const handleSelectItem = (item) => {
-        setSelectedItem(item);
-        setShowDailyReport(true);
-    };
-
     return (
         <div className="stock-management-panel">
             <style>{`
+                /* ... រក្សាទុក CSS ទាំងអស់ពីកូដដើមរបស់អ្នក ... */
                 .stock-management-panel {
                     max-width: 1200px;
                     margin: 0 auto;
                     padding: 20px;
-                    font-family: 'Arial', sans-serif;
                 }
                 .report-header {
                     display: flex;
@@ -277,7 +273,8 @@ function StockManagement({ stockData, onUpdateStock, transactions = [], onAddTra
                     background: #f9fafb;
                     cursor: pointer;
                 }
-                .stock-alerts {
+                /* ... (Copy the rest of your CSS here) ... */
+                 .stock-alerts {
                     background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
                     border-radius: 10px;
                     padding: 16px;
@@ -285,6 +282,7 @@ function StockManagement({ stockData, onUpdateStock, transactions = [], onAddTra
                     color: white;
                     box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3);
                 }
+
                 .stock-alerts h4 {
                     margin: 0 0 10px 0;
                     font-size: 16px;
@@ -292,11 +290,13 @@ function StockManagement({ stockData, onUpdateStock, transactions = [], onAddTra
                     align-items: center;
                     gap: 8px;
                 }
+
                 .alert-items {
                     display: flex;
                     flex-wrap: wrap;
                     gap: 8px;
                 }
+
                 .alert-badge {
                     background: rgba(255, 255, 255, 0.3);
                     padding: 6px 12px;
@@ -304,12 +304,14 @@ function StockManagement({ stockData, onUpdateStock, transactions = [], onAddTra
                     font-size: 13px;
                     backdrop-filter: blur(10px);
                 }
+
                 .stock-summary {
                     display: grid;
                     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
                     gap: 12px;
                     margin-bottom: 20px;
                 }
+
                 .summary-card {
                     background: white;
                     border-radius: 10px;
@@ -317,21 +319,25 @@ function StockManagement({ stockData, onUpdateStock, transactions = [], onAddTra
                     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
                     border-left: 4px solid #667eea;
                 }
+
                 .summary-card h4 {
                     margin: 0 0 8px 0;
                     color: #6b7280;
                     font-size: 12px;
                     font-weight: 600;
                 }
+
                 .summary-card .value {
                     font-size: 24px;
                     font-weight: 700;
                     color: #1f2937;
                 }
+
                 .summary-card.green { border-left-color: #10b981; }
                 .summary-card.orange { border-left-color: #f59e0b; }
                 .summary-card.red { border-left-color: #ef4444; }
                 .summary-card.blue { border-left-color: #3b82f6; }
+
                 .add-item-form, .transaction-form {
                     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
                     border-radius: 12px;
@@ -343,42 +349,51 @@ function StockManagement({ stockData, onUpdateStock, transactions = [], onAddTra
                     margin-left: auto;
                     margin-right: auto;
                 }
+
                 @keyframes slideDown {
                     from { opacity: 0; transform: translateY(-20px); }
                     to { opacity: 1; transform: translateY(0); }
                 }
+
                 .form-header {
                     background: rgba(255, 255, 255, 0.15);
                     backdrop-filter: blur(10px);
                     padding: 16px 20px;
                     border-bottom: 1px solid rgba(255, 255, 255, 0.2);
                 }
+
                 .form-header h3 {
                     margin: 0 0 4px 0;
                     color: white;
                     font-size: 18px;
                     font-weight: 700;
                 }
+
                 .form-subtitle {
                     margin: 0;
                     color: rgba(255, 255, 255, 0.9);
                     font-size: 13px;
                 }
+
                 .form-body {
                     padding: 20px;
                     background: white;
                 }
+
                 .form-group {
                     margin-bottom: 16px;
                 }
+
                 .form-group.full-width {
                     width: 100%;
                 }
+
                 .form-row {
                     display: grid;
                     grid-template-columns: 1fr 1fr;
                     gap: 16px;
                 }
+
                 .form-label {
                     display: flex;
                     align-items: center;
@@ -388,10 +403,12 @@ function StockManagement({ stockData, onUpdateStock, transactions = [], onAddTra
                     font-weight: 600;
                     font-size: 13px;
                 }
+
                 .required {
                     color: #ef4444;
                     font-weight: bold;
                 }
+
                 .form-input, .form-textarea {
                     width: 100%;
                     padding: 10px 14px;
@@ -402,17 +419,20 @@ function StockManagement({ stockData, onUpdateStock, transactions = [], onAddTra
                     background: #f9fafb;
                     box-sizing: border-box;
                 }
+
                 .form-textarea {
                     resize: vertical;
                     min-height: 80px;
                     font-family: inherit;
                 }
+
                 .form-input:focus, .form-textarea:focus {
                     outline: none;
                     border-color: #667eea;
                     background: white;
                     box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
                 }
+
                 .form-actions {
                     display: flex;
                     gap: 10px;
@@ -420,6 +440,7 @@ function StockManagement({ stockData, onUpdateStock, transactions = [], onAddTra
                     background: #f9fafb;
                     border-top: 1px solid #e5e7eb;
                 }
+
                 .btn-submit, .btn-cancel {
                     flex: 1;
                     padding: 12px 20px;
@@ -434,24 +455,29 @@ function StockManagement({ stockData, onUpdateStock, transactions = [], onAddTra
                     justify-content: center;
                     gap: 6px;
                 }
+
                 .btn-submit {
                     background: linear-gradient(135deg, #10b981 0%, #059669 100%);
                     color: white;
                     box-shadow: 0 3px 10px rgba(16, 185, 129, 0.3);
                 }
+
                 .btn-submit:hover {
                     transform: translateY(-2px);
                     box-shadow: 0 5px 16px rgba(16, 185, 129, 0.4);
                 }
+
                 .btn-cancel {
                     background: white;
                     color: #6b7280;
                     border: 2px solid #e5e7eb;
                 }
+
                 .btn-cancel:hover {
                     background: #f3f4f6;
                     border-color: #d1d5db;
                 }
+
                 .btn-add-item, .btn-export, .btn-history, .btn-report {
                     padding: 10px 20px;
                     border: none;
@@ -463,29 +489,37 @@ function StockManagement({ stockData, onUpdateStock, transactions = [], onAddTra
                     box-shadow: 0 3px 10px rgba(0,0,0,0.2);
                     color: white;
                 }
+
                 .btn-add-item {
                     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
                 }
+
                 .btn-add-item.active {
                     background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
                 }
+
                 .btn-export {
                     background: linear-gradient(135deg, #10b981 0%, #059669 100%);
                 }
+
                 .btn-history {
                     background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
                 }
+
                 .btn-report {
                     background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
                 }
+
                 .btn-add-item:hover, .btn-export:hover, .btn-history:hover, .btn-report:hover {
                     transform: translateY(-2px);
                 }
+
                 .stock-actions {
                     display: flex;
                     gap: 10px;
                     flex-wrap: wrap;
                 }
+
                 .stock-table {
                     width: 100%;
                     background: white;
@@ -494,6 +528,7 @@ function StockManagement({ stockData, onUpdateStock, transactions = [], onAddTra
                     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
                     margin-top: 20px;
                 }
+
                 .stock-table th {
                     background: #f3f4f6;
                     padding: 12px;
@@ -502,27 +537,23 @@ function StockManagement({ stockData, onUpdateStock, transactions = [], onAddTra
                     font-weight: 600;
                     color: #374151;
                 }
+
                 .stock-table td {
                     padding: 12px;
                     border-top: 1px solid #e5e7eb;
                     font-size: 14px;
-                    cursor: pointer;
                 }
-                .stock-table tr:hover {
-                    background: #f3f4f6;
-                }
-                .stock-table tr.selected {
-                    background: #dbeafe;
-                    border: 2px solid #3b82f6;
-                }
+
                 .stock-table .number-cell {
                     text-align: right;
                 }
+
                 .action-buttons {
                     display: flex;
                     gap: 6px;
                     flex-wrap: wrap;
                 }
+
                 .btn-stock-in, .btn-stock-out, .btn-delete-item, .btn-view-history {
                     padding: 6px 12px;
                     border: none;
@@ -533,22 +564,28 @@ function StockManagement({ stockData, onUpdateStock, transactions = [], onAddTra
                     transition: all 0.2s;
                     color: white;
                 }
+
                 .btn-stock-in {
                     background: #10b981;
                 }
+
                 .btn-stock-out {
                     background: #f59e0b;
                 }
+
                 .btn-delete-item {
                     background: #ef4444;
                 }
+
                 .btn-view-history {
                     background: #3b82f6;
                 }
+
                 .btn-stock-in:hover, .btn-stock-out:hover, .btn-delete-item:hover, .btn-view-history:hover {
                     transform: scale(1.05);
                     opacity: 0.9;
                 }
+
                 .history-panel, .report-panel {
                     background: white;
                     border-radius: 10px;
@@ -556,10 +593,12 @@ function StockManagement({ stockData, onUpdateStock, transactions = [], onAddTra
                     margin-top: 20px;
                     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
                 }
+
                 .history-panel h3, .report-panel h3 {
                     margin: 0;
                     color: #1f2937;
                 }
+
                 .transaction-item {
                     padding: 12px;
                     border-left: 4px solid #667eea;
@@ -567,22 +606,27 @@ function StockManagement({ stockData, onUpdateStock, transactions = [], onAddTra
                     margin-bottom: 10px;
                     border-radius: 6px;
                 }
+
                 .transaction-item.type-in {
                     border-left-color: #10b981;
                 }
+
                 .transaction-item.type-out {
                     border-left-color: #f59e0b;
                 }
+
                 .transaction-header {
                     display: flex;
                     justify-content: space-between;
                     margin-bottom: 6px;
                     font-weight: 600;
                 }
+
                 .transaction-details {
                     font-size: 13px;
                     color: #6b7280;
                 }
+
                 .stock-movement-badge {
                     display: inline-block;
                     padding: 4px 8px;
@@ -591,14 +635,17 @@ function StockManagement({ stockData, onUpdateStock, transactions = [], onAddTra
                     font-weight: 600;
                     margin-left: 8px;
                 }
+
                 .stock-movement-badge.in {
                     background: #d1fae5;
                     color: #065f46;
                 }
+
                 .stock-movement-badge.out {
                     background: #fed7aa;
                     color: #92400e;
                 }
+
                 .item-history-modal {
                     position: fixed;
                     top: 0;
@@ -612,6 +659,7 @@ function StockManagement({ stockData, onUpdateStock, transactions = [], onAddTra
                     z-index: 1000;
                     padding: 20px;
                 }
+
                 .item-history-content {
                     background: white;
                     border-radius: 12px;
@@ -621,6 +669,7 @@ function StockManagement({ stockData, onUpdateStock, transactions = [], onAddTra
                     overflow-y: auto;
                     box-shadow: 0 20px 60px rgba(0,0,0,0.3);
                 }
+
                 @media (max-width: 768px) {
                     .form-row, .stock-summary {
                         grid-template-columns: 1fr;
@@ -655,32 +704,36 @@ function StockManagement({ stockData, onUpdateStock, transactions = [], onAddTra
                 </div>
             )}
 
-            {/* Show summary only when item is selected */}
-            {selectedItem && getStatsForSelectedItem && (
-                <div className="stock-summary">
-                    <div className="summary-card">
-                        <h4>📦 ទំនិញដែលជ្រើស</h4>
-                        <div className="value">{selectedItem.khmerName}</div>
-                    </div>
-                    <div className="summary-card blue">
-                        <h4>🧺 ស្តុកនៅសល់</h4>
-                        <div className="value" style={{color: '#3b82f6'}}>{selectedItem.quantity}</div>
-                    </div>
-                    <div className="summary-card green">
-                        <h4>📥 ទិញចូលថ្ងៃនេះ</h4>
-                        <div className="value" style={{color: '#10b981'}}>{getStatsForSelectedItem.todayIn}</div>
-                    </div>
-                    <div className="summary-card orange">
-                        <h4>📤 លក់ចេញថ្ងៃនេះ</h4>
-                        <div className="value" style={{color: '#f59e0b'}}>{getStatsForSelectedItem.todayOut}</div>
-                    </div>
+            {/* កែប្រែ Summary Cards: ដកចំណូលចេញ ដាក់ចំនួនទំនិញសរុបជំនួស */}
+            <div className="stock-summary">
+                <div className="summary-card">
+                    <h4>📦 ប្រភេទទំនិញ</h4>
+                    <div className="value">{Object.keys(stockData).length}</div>
                 </div>
-            )}
+                <div className="summary-card blue">
+                    <h4>🧺 ចំនួនទំនិញសរុបក្នុងស្តុក</h4>
+                    <div className="value" style={{color: '#3b82f6'}}>{totalStockQuantity}</div>
+                </div>
+                <div className="summary-card green">
+                    <h4>📥 ទិញចូលថ្ងៃនេះ</h4>
+                    <div className="value" style={{color: '#10b981'}}>{getTodayStats.stockIn}</div>
+                </div>
+                <div className="summary-card orange">
+                    <h4>📤 លក់ចេញថ្ងៃនេះ</h4>
+                    <div className="value" style={{color: '#f59e0b'}}>{getTodayStats.stockOut}</div>
+                </div>
+            </div>
 
             <div className="stock-controls">
                 <div className="stock-actions">
                     <button onClick={handleExportExcel} className="btn-export">
                         📊 Excel
+                    </button>
+                    <button 
+                        onClick={() => setShowDailyReport(!showDailyReport)} 
+                        className="btn-report"
+                    >
+                        📋 {showDailyReport ? 'បិទរបាយការណ៍' : 'របាយការណ៍'}
                     </button>
                     <button 
                         onClick={() => setShowHistory(!showHistory)} 
@@ -715,16 +768,29 @@ function StockManagement({ stockData, onUpdateStock, transactions = [], onAddTra
                                     className="form-input"
                                 />
                             </div>
-                            <div className="form-group">
-                                <label className="form-label">📦 ចំនួនស្តុកដំបូង</label>
-                                <input
-                                    type="number"
-                                    min="0"
-                                    value={newStockItem.quantity || ''}
-                                    onChange={(e) => setNewStockItem({...newStockItem, quantity: parseInt(e.target.value) || 0})}
-                                    placeholder="0"
-                                    className="form-input"
-                                />
+                            <div className="form-row">
+                                <div className="form-group">
+                                    <label className="form-label">📦 ចំនួនស្តុកដំបូង</label>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        value={newStockItem.quantity || ''}
+                                        onChange={(e) => setNewStockItem({...newStockItem, quantity: parseInt(e.target.value) || 0})}
+                                        placeholder="0"
+                                        className="form-input"
+                                    />
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">💵 តម្លៃ (KHR)</label>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        value={newStockItem.priceKHR || ''}
+                                        onChange={(e) => setNewStockItem({...newStockItem, priceKHR: parseFloat(e.target.value) || 0})}
+                                        placeholder="0"
+                                        className="form-input"
+                                    />
+                                </div>
                             </div>
                             <div className="form-group">
                                 <label className="form-label">⚠️ ស្តុកអប្បបរមា</label>
@@ -739,7 +805,7 @@ function StockManagement({ stockData, onUpdateStock, transactions = [], onAddTra
                             </div>
                         </div>
                         <div className="form-actions">
-                            <button onClick={() => { setShowAddForm(false); setNewStockItem({ khmerName: '', category: 'COLD DRINKS', quantity: 0, minStockAlert: 5 }); }} className="btn-cancel">
+                            <button onClick={() => { setShowAddForm(false); setNewStockItem({ khmerName: '', category: 'COLD DRINKS', priceKHR: 0, quantity: 0, minStockAlert: 5 }); }} className="btn-cancel">
                                 ✕ បោះបង់
                             </button>
                             <button onClick={handleAddNewItem} className="btn-submit">
@@ -756,22 +822,35 @@ function StockManagement({ stockData, onUpdateStock, transactions = [], onAddTra
                             <p className="form-subtitle">ស្តុកបច្ចុប្បន្ន: {selectedItem.quantity}</p>
                         </div>
                         <div className="form-body">
-                            <div className="form-group">
-                                <label className="form-label">📦 ចំនួន <span className="required">*</span></label>
-                                <input
-                                    type="number"
-                                    min="1"
-                                    max={transactionType === 'OUT' ? selectedItem.quantity : undefined}
-                                    value={transactionData.quantity || ''}
-                                    onChange={(e) => setTransactionData({...transactionData, quantity: parseInt(e.target.value) || 0})}
-                                    placeholder="0"
-                                    className="form-input"
-                                />
-                                {transactionType === 'OUT' && transactionData.quantity > selectedItem.quantity && (
-                                    <div style={{color: '#ef4444', fontSize: '12px', marginTop: '4px'}}>
-                                        ⚠️ លើសពីស្តុកបច្ចុប្បន្ន!
-                                    </div>
-                                )}
+                            <div className="form-row">
+                                <div className="form-group">
+                                    <label className="form-label">📦 ចំនួន <span className="required">*</span></label>
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        max={transactionType === 'OUT' ? selectedItem.quantity : undefined}
+                                        value={transactionData.quantity || ''}
+                                        onChange={(e) => setTransactionData({...transactionData, quantity: parseInt(e.target.value) || 0})}
+                                        placeholder="0"
+                                        className="form-input"
+                                    />
+                                    {transactionType === 'OUT' && transactionData.quantity > selectedItem.quantity && (
+                                        <div style={{color: '#ef4444', fontSize: '12px', marginTop: '4px'}}>
+                                            ⚠️ លើសពីស្តុកបច្ចុប្បន្ន!
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">💵 តម្លៃក្នុង 1 ឯកតា</label>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        value={transactionData.pricePerUnit || ''}
+                                        onChange={(e) => setTransactionData({...transactionData, pricePerUnit: parseFloat(e.target.value) || 0})}
+                                        placeholder="0"
+                                        className="form-input"
+                                    />
+                                </div>
                             </div>
                             <div className="form-group">
                                 <label className="form-label">📝 កំណត់ចំណាំ</label>
@@ -782,17 +861,22 @@ function StockManagement({ stockData, onUpdateStock, transactions = [], onAddTra
                                     className="form-textarea"
                                 />
                             </div>
-                            <div style={{padding: '12px', background: '#f3f4f6', borderRadius: '8px'}}>
-                                <div style={{fontSize: '13px', color: '#6b7280'}}>
-                                    {transactionType === 'IN' 
-                                        ? `ស្តុកបន្ទាប់ពីទិញ: ${selectedItem.quantity} + ${transactionData.quantity} = ${selectedItem.quantity + transactionData.quantity}`
-                                        : `ស្តុកបន្ទាប់ពីលក់: ${selectedItem.quantity} - ${transactionData.quantity} = ${selectedItem.quantity - transactionData.quantity}`
-                                    }
+                            {transactionData.quantity > 0 && transactionData.pricePerUnit > 0 && (
+                                <div style={{padding: '12px', background: '#f3f4f6', borderRadius: '8px'}}>
+                                    <div style={{fontWeight: '600', marginBottom: '8px'}}>
+                                        💰 តម្លៃសរុប: {(transactionData.quantity * transactionData.pricePerUnit).toLocaleString()} KHR
+                                    </div>
+                                    <div style={{fontSize: '13px', color: '#6b7280'}}>
+                                        {transactionType === 'IN' 
+                                            ? `ស្តុកបន្ទាប់ពីទិញ: ${selectedItem.quantity} + ${transactionData.quantity} = ${selectedItem.quantity + transactionData.quantity}`
+                                            : `ស្តុកបន្ទាប់ពីលក់: ${selectedItem.quantity} - ${transactionData.quantity} = ${selectedItem.quantity - transactionData.quantity}`
+                                        }
+                                    </div>
                                 </div>
-                            </div>
+                            )}
                         </div>
                         <div className="form-actions">
-                            <button onClick={() => { setShowTransactionForm(false); }} className="btn-cancel">
+                            <button onClick={() => { setShowTransactionForm(false); setSelectedItem(null); }} className="btn-cancel">
                                 ✕ បោះបង់
                             </button>
                             <button onClick={handleSubmitTransaction} className="btn-submit">
@@ -803,8 +887,8 @@ function StockManagement({ stockData, onUpdateStock, transactions = [], onAddTra
                 )}
             </div>
 
-            {/* Report Panel - Show only when item is selected */}
-            {selectedItem && showDailyReport && getStatsForSelectedItem && (
+            {/* កែប្រែ Report Panel: បន្ថែម Calendar និងដកតម្លៃចេញ */}
+            {showDailyReport && (
                 <div className="report-panel">
                     <div className="report-header">
                         <h3>📋 របាយការណ៍សម្រាប់ថ្ងៃ៖ {new Date(reportDate).toLocaleDateString('km-KH', { day: '2-digit', month: 'long', year: 'numeric' })}</h3>
@@ -815,24 +899,23 @@ function StockManagement({ stockData, onUpdateStock, transactions = [], onAddTra
                             className="date-picker"
                         />
                     </div>
-                    
                     <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px', marginBottom: '16px'}}>
                         <div style={{padding: '12px', background: '#d1fae5', borderRadius: '8px'}}>
                             <div style={{fontSize: '12px', color: '#065f46', marginBottom: '4px'}}>📥 ទិញចូលសរុប</div>
-                            <div style={{fontSize: '24px', fontWeight: '700', color: '#065f46'}}>{getStatsForSelectedItem.stockIn}</div>
+                            <div style={{fontSize: '24px', fontWeight: '700', color: '#065f46'}}>{getStatsForDate.stockIn}</div>
                         </div>
                         <div style={{padding: '12px', background: '#fed7aa', borderRadius: '8px'}}>
                             <div style={{fontSize: '12px', color: '#92400e', marginBottom: '4px'}}>📤 លក់ចេញសរុប</div>
-                            <div style={{fontSize: '24px', fontWeight: '700', color: '#92400e'}}>{getStatsForSelectedItem.stockOut}</div>
+                            <div style={{fontSize: '24px', fontWeight: '700', color: '#92400e'}}>{getStatsForDate.stockOut}</div>
                         </div>
                     </div>
                     
-                    {getStatsForSelectedItem.selectedDateTransactions.length > 0 ? (
+                    {getStatsForDate.reportDateTransactions.length > 0 ? (
                         <div>
                             <h4 style={{marginTop: '16px', marginBottom: '12px', color: '#374151'}}>
-                                📝 Transaction ({getStatsForSelectedItem.selectedDateTransactions.length})
+                                📝 Transaction ({getStatsForDate.reportDateTransactions.length})
                             </h4>
-                            {getStatsForSelectedItem.selectedDateTransactions.slice().reverse().map(txn => (
+                            {getStatsForDate.reportDateTransactions.slice().reverse().map(txn => (
                                 <div key={txn.id} className={`transaction-item type-${txn.type.toLowerCase()}`}>
                                     <div className="transaction-header">
                                         <span>{txn.type === 'IN' ? '📥' : '📤'} {txn.itemName}</span>
@@ -841,7 +924,7 @@ function StockManagement({ stockData, onUpdateStock, transactions = [], onAddTra
                                         </span>
                                     </div>
                                     <div className="transaction-details">
-                                        {formatDateTime(txn.createdAt)}
+                                        {formatDateTime(txn.createdAt)} | តម្លៃ: {txn.totalAmount.toLocaleString()} KHR
                                         {txn.previousStock !== undefined && (
                                             <> | ស្តុក: {txn.previousStock} → {txn.newStock}</>
                                         )}
@@ -868,7 +951,7 @@ function StockManagement({ stockData, onUpdateStock, transactions = [], onAddTra
                                 </span>
                             </div>
                             <div className="transaction-details">
-                                {formatDateTime(txn.createdAt)}
+                                {formatDateTime(txn.createdAt)} | តម្លៃ: {txn.totalAmount.toLocaleString()} KHR
                                 {txn.previousStock !== undefined && (
                                     <> | ស្តុក: {txn.previousStock} → {txn.newStock}</>
                                 )}
@@ -879,15 +962,15 @@ function StockManagement({ stockData, onUpdateStock, transactions = [], onAddTra
                 </div>
             )}
 
-            {/* Stock Table - Only 3 columns and clickable rows */}
             {filteredStock.length > 0 ? (
                 <table className="stock-table">
                     <thead>
                         <tr>
                             <th>ឈ្មោះទំនិញ</th>
-                            <th className="number-cell">ទិញចូល</th>
-                            <th className="number-cell">លក់ចេញ</th>
-                            <th className="number-cell">ស្តុកនៅសល់</th>
+                            <th className="number-cell">តម្លៃ (KHR)</th>
+                            <th className="number-cell">ទិញថ្ងៃនេះ</th>
+                            <th className="number-cell">លក់ថ្ងៃនេះ</th>
+                            <th className="number-cell">សល់ស្តុក</th>
                             <th>សកម្មភាព</th>
                         </tr>
                     </thead>
@@ -895,37 +978,26 @@ function StockManagement({ stockData, onUpdateStock, transactions = [], onAddTra
                         {filteredStock.map(item => {
                             const key = `${item.khmerName}_${item.category}`;
                             const isLowStock = item.quantity <= (item.minStockAlert || 5);
-                            const isSelected = selectedItem && selectedItem.khmerName === item.khmerName && selectedItem.category === item.category;
                             const itemHistory = getItemHistory(key);
-                            
-                            // Calculate total IN and OUT from transaction history
-                            const totalIn = itemHistory
-                                .filter(t => t.type === 'IN')
-                                .reduce((sum, t) => sum + t.quantity, 0);
-                            
-                            const totalOut = itemHistory
-                                .filter(t => t.type === 'OUT')
-                                .reduce((sum, t) => sum + t.quantity, 0);
+                            const todayTxn = itemHistory.filter(t => t.createdAt.startsWith(new Date().toISOString().split('T')[0]));
+                            const todayIn = todayTxn.filter(t => t.type === 'IN').reduce((s, t) => s + t.quantity, 0);
+                            const todayOut = todayTxn.filter(t => t.type === 'OUT').reduce((s, t) => s + t.quantity, 0);
 
                             return (
-                                <tr 
-                                    key={key} 
-                                    className={isSelected ? 'selected' : ''}
-                                    style={{background: isLowStock ? '#fef3c7' : 'white'}}
-                                    onClick={() => handleSelectItem(item)}
-                                >
+                                <tr key={key} style={{background: isLowStock ? '#fef3c7' : 'white'}}>
                                     <td>
                                         {item.khmerName}
                                         {isLowStock && <span style={{color: '#f59e0b', marginLeft: '8px'}}>⚠️</span>}
                                     </td>
+                                    <td className="number-cell">{item.priceKHR.toLocaleString()}</td>
                                     <td className="number-cell">
-                                        {totalIn > 0 ? (
-                                            <span className="stock-movement-badge in">+{totalIn}</span>
+                                        {todayIn > 0 ? (
+                                            <span className="stock-movement-badge in">+{todayIn}</span>
                                         ) : '-'}
                                     </td>
                                     <td className="number-cell">
-                                        {totalOut > 0 ? (
-                                            <span className="stock-movement-badge out">-{totalOut}</span>
+                                        {todayOut > 0 ? (
+                                            <span className="stock-movement-badge out">-{todayOut}</span>
                                         ) : '-'}
                                     </td>
                                     <td className="number-cell" style={{fontWeight: '700', fontSize: '16px', color: isLowStock ? '#f59e0b' : '#10b981'}}>
@@ -934,30 +1006,21 @@ function StockManagement({ stockData, onUpdateStock, transactions = [], onAddTra
                                     <td>
                                         <div className="action-buttons">
                                             <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    handleOpenTransaction(item, 'IN');
-                                                }}
+                                                onClick={() => handleOpenTransaction(item, 'IN')}
                                                 className="btn-stock-in"
                                                 title="ទិញចូល"
                                             >
                                                 📥 ចូល
                                             </button>
                                             <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    handleOpenTransaction(item, 'OUT');
-                                                }}
+                                                onClick={() => handleOpenTransaction(item, 'OUT')}
                                                 className="btn-stock-out"
                                                 title="លក់ចេញ"
                                             >
                                                 📤 ចេញ
                                             </button>
                                             <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    handleDeleteItem(key);
-                                                }}
+                                                onClick={() => handleDeleteItem(key)}
                                                 className="btn-delete-item"
                                                 title="លុបទំនិញ"
                                             >
