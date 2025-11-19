@@ -9,7 +9,6 @@ function StockManagement({ stockData, onUpdateStock, transactions = [], onAddTra
     const [showDailyReport, setShowDailyReport] = useState(false);
     const [showItemDetail, setShowItemDetail] = useState(false);
     const [selectedItemDetail, setSelectedItemDetail] = useState(null);
-    const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
     const [transactionType, setTransactionType] = useState('IN');
     const [selectedItem, setSelectedItem] = useState(null);
     const [transactionData, setTransactionData] = useState({
@@ -74,32 +73,7 @@ function StockManagement({ stockData, onUpdateStock, transactions = [], onAddTra
         setShowItemDetail(true);
     };
 
-    // Calculate stock movement for selected date
-    const getDateStockMovement = (date) => {
-        const dateTransactions = transactions.filter(txn => 
-            txn.createdAt && txn.createdAt.startsWith(date)
-        );
 
-        const itemMovements = {};
-        dateTransactions.forEach(txn => {
-            if (!itemMovements[txn.itemKey]) {
-                itemMovements[txn.itemKey] = {
-                    itemName: txn.itemName,
-                    stockIn: 0,
-                    stockOut: 0,
-                    opening: 0,
-                    closing: 0
-                };
-            }
-            if (txn.type === 'IN') {
-                itemMovements[txn.itemKey].stockIn += txn.quantity;
-            } else {
-                itemMovements[txn.itemKey].stockOut += txn.quantity;
-            }
-        });
-
-        return itemMovements;
-    };
 
     const filteredStock = Object.values(stockData)
         .filter(item => item.quantity > 0)
