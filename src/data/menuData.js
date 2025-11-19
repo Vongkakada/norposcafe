@@ -55,7 +55,7 @@ export const menuData = [
     
     //BORA
     { khmerName: "កាហ្វេដូងគ្រីម", priceKHR: 7200, category: "BORA", icon: "❌" },
-    { khmerName: "សូកូដូងគ្រីម", priceKHR: 7200, category: "BORA", icon: "❌" },
+    { khmerName: "សូកូឡាដូងគ្រីម", priceKHR: 7200, category: "BORA", icon: "❌" },
     { khmerName: "ម៉ាត់ឆាដូងគ្រីម", priceKHR: 7200, category: "BORA", icon: "❌" },
 
  ];

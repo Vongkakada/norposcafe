@@ -26,6 +26,7 @@ function ReceiptModal({ order, orderId, shopName = "ន កាហ្វេ", tri
             const now = new Date();
             const totalKHR = order.reduce((sum, item) => sum + (item.priceKHR || 0) * item.quantity, 0);
             const totalUSD = formatUSD(totalKHR);
+            const totalItems = order.reduce((sum, item) => sum + item.quantity, 0);
 
             receiptWindow.document.write(`
 <!DOCTYPE html>
@@ -56,8 +57,9 @@ function ReceiptModal({ order, orderId, shopName = "ន កាហ្វេ", tri
         .divider { border-top: 2px dashed #000; margin: 12px 0; }
         table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 13px; }
         th, td { padding: 5px 2px; }
-        th:nth-child(2), td:nth-child(2) { text-align: center; width: 18%; }
-        th:last-child, td:last-child { text-align: right; width: 32%; }
+        th:nth-child(2), td:nth-child(2) { text-align: center; width: 15%; }
+        th:nth-child(3), td:nth-child(3) { text-align: right; width: 25%; }
+        th:last-child, td:last-child { text-align: right; width: 30%; }
         .total { font-weight: bold; font-size: 16px; border-top: 2px solid #000; padding-top: 8px; margin-top: 8px; }
 
         /* សំខាន់បំផុត: Print Dialog ដូច Desktop */
@@ -101,7 +103,9 @@ function ReceiptModal({ order, orderId, shopName = "ន កាហ្វេ", tri
                     <tr>
                         <td>${item.khmerName}${item.englishName ? ` (${item.englishName})` : ''}</td>
                         <td>${item.quantity}</td>
-                        <td>${KHR_SYMBOL}${formatKHR(item.priceKHR)}</td>
+                        <td>${KHR_SYMBOL}${formatKHR(item.priceKHR)}<br>
+                        <span style="font-size:11px; color:#666;">$${formatUSD(item.priceKHR)}</span>
+                        </td>
                         <td>
                             ${KHR_SYMBOL}${formatKHR(item.priceKHR * item.quantity)}<br>
                             <span style="font-size:11px; color:#666;">$${formatUSD(item.priceKHR * item.quantity)}</span>
@@ -110,12 +114,11 @@ function ReceiptModal({ order, orderId, shopName = "ន កាហ្វេ", tri
                 `).join('')}
             </tbody>
         </table>
-        <div class="divider"></div>
-        <div style="text-align:right; font-size:14px;">
-            <div>
-                សរុបរង: ${KHR_SYMBOL}${formatKHR(totalKHR)} 
-                <span style="font-size:12px; color:#666;">($${totalUSD})</span>
-            </div>
+        <div style="text-align:left; font-size:13px; padding:8px 0; border-top:1px solid #ddd; border-bottom:1px solid #ddd; margin:5px 0;">
+            <strong>សរុបចំនួន Qty: ${totalItems}</strong><br>
+            <span style="font-size:11px; color:#666;">Total Qty: ${totalItems}</span>
+        </div>
+        <div style="text-align:right; font-size:14px; margin-top:10px;">
             <div class="total">
                 សរុបរួម: ${KHR_SYMBOL}${formatKHR(totalKHR)}
                 <div style="font-size:14px; color:#555; margin-top:5px;">
